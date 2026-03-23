@@ -12,6 +12,7 @@ function updateInteractiveDisplay(data) {
         toUnicode: data.toUnicode,
         toVerbalA11y: data.toVerbalA11y,
         toHTML: data.toHTML,
+        toJson: `<div class="json-view">${JSON.stringify(JSON.parse(data.toJson), null, 2)}</div>`,
         toImageBuffer: `
       <div class="image-output-wrapper">
         <div class="binary-view">${data.toImageBufferHex}</div>
@@ -49,6 +50,9 @@ async function loadExamples() {
             toVerbalA11y: "8. Exemplos do toVerbalA11y()",
             toUnicode: "9. Exemplos do toUnicode()",
             toImageBuffer: "10. Exemplos do toImageBuffer()",
+            divInt: "11. Exemplos de divInt() (Divisão Inteira)",
+            mod: "12. Exemplos de mod() (Módulo)",
+            toJson: "13. Exemplos do toJson() (Exportação JSON)",
         };
 
         for (const [method, examples] of Object.entries(categories)) {
@@ -71,8 +75,12 @@ async function loadExamples() {
               <img src="${ex.outputs.toImageDataBase64}" alt="Image Result" class="image-result">
             </div>
           `;
-                } else if (method === "toHTML") {
-                    resultView = `<div class="card-math-render">${ex.outputs.toHTML}</div>`;
+                } else if (method === "toHTML" || method === "divInt" || method === "mod") {
+                    resultView = `<div class="card-math-render">${ex.outputs.toHTML}</div>
+                                  <div class="result-label">Resultado numérico:</div>
+                                  <div class="card-result-text">${ex.outputs.toString}</div>`;
+                } else if (method === "toJson") {
+                    resultView = `<div class="json-view">${JSON.stringify(JSON.parse(ex.outputs.toJson), null, 2)}</div>`;
                 } else {
                     resultView = `<div class="card-result-text">${ex.outputs[method]}</div>`;
                 }

@@ -11,22 +11,21 @@ const ROOT = dirname(__dirname);
  */
 function mapAllOutputs(
     output: CurrencyNBROutput,
-    opts: { decimals?: number; locale?: string; currency?: string } = {},
 ) {
-    const d = opts.decimals;
-    const buffer = output.toImageBuffer(d);
+    const buffer = output.toImageBuffer();
     const hex = Array.from(buffer).map((b) => b.toString(16).padStart(2, "0")).join(" ");
     const base64 = btoa(String.fromCharCode(...buffer));
 
     return {
-        toString: output.toString(d),
-        toFloatNumber: output.toFloatNumber(d),
+        toString: output.toString(),
+        toFloatNumber: output.toFloatNumber(),
         toBigInt: output.toBigInt().toString(),
-        toMonetary: output.toMonetary(opts.locale || "pt-BR", opts.currency || "BRL", d),
-        toLaTeX: output.toLaTeX(d),
-        toHTML: output.toHTML(d),
-        toVerbalA11y: output.toVerbalA11y(d),
-        toUnicode: output.toUnicode(d),
+        toMonetary: output.toMonetary(),
+        toLaTeX: output.toLaTeX(),
+        toHTML: output.toHTML(),
+        toVerbalA11y: output.toVerbalA11y(),
+        toUnicode: output.toUnicode(),
+        toJson: output.toJson(),
         toImageBufferHex: hex,
         toImageDataBase64: `data:image/svg+xml;base64,${base64}`,
     };
@@ -64,8 +63,8 @@ const getCategorizedExamples = () => {
             {
                 title: "Cadeia de Soma",
                 context: "Valores: 0.1, 0.2, 0.3",
-                code: "CurrencyNBR.from(0.1).add(0.2).add(0.3).commit(2).toString()",
-                outputs: mapAllOutputs(CurrencyNBR.from(0.1).add(0.2).add(0.3).commit(2)),
+                code: "CurrencyNBR.from('0.1').add('0.2').add('0.3').commit(2).toString()",
+                outputs: mapAllOutputs(CurrencyNBR.from("0.1").add("0.2").add("0.3").commit(2)),
             },
         ],
         toFloatNumber: [
@@ -112,24 +111,20 @@ const getCategorizedExamples = () => {
             {
                 title: "Real Brasileiro (Padrão)",
                 context: "Valor: 1234.56",
-                code: "CurrencyNBR.from(1234.56).commit().toMonetary('pt-BR', 'BRL')",
-                outputs: mapAllOutputs(CurrencyNBR.from(1234.56).commit(), { locale: "pt-BR", currency: "BRL" }),
+                code: "CurrencyNBR.from('1234.56').commit(2, { locale: 'pt-BR' }).toMonetary()",
+                outputs: mapAllOutputs(CurrencyNBR.from("1234.56").commit(2, { locale: "pt-BR" })),
             },
             {
                 title: "Dólar Americano",
                 context: "Valor: 1234.56",
-                code: "CurrencyNBR.from(1234.56).commit().toMonetary('en-US', 'USD')",
-                outputs: mapAllOutputs(CurrencyNBR.from(1234.56).commit(), { locale: "en-US", currency: "USD" }),
+                code: "CurrencyNBR.from('1234.56').commit(2, { locale: 'en-US' }).toMonetary()",
+                outputs: mapAllOutputs(CurrencyNBR.from("1234.56").commit(2, { locale: "en-US" })),
             },
             {
                 title: "Euro com 4 casas",
                 context: "Valor: 1.2345",
-                code: "CurrencyNBR.from(1.2345).commit(4).toMonetary('de-DE', 'EUR', 4)",
-                outputs: mapAllOutputs(CurrencyNBR.from(1.2345).commit(4), {
-                    locale: "de-DE",
-                    currency: "EUR",
-                    decimals: 4,
-                }),
+                code: "CurrencyNBR.from('1.2345').commit(4, { locale: 'fr-FR' }).toMonetary()",
+                outputs: mapAllOutputs(CurrencyNBR.from("1.2345").commit(4, { locale: "fr-FR" })),
             },
         ],
         toLaTeX: [
@@ -156,14 +151,14 @@ const getCategorizedExamples = () => {
             {
                 title: "Renderização SSR KaTeX",
                 context: "Valor: 10.50 * 2",
-                code: "CurrencyNBR.from(10.5).mult(2).commit(0).toHTML()",
-                outputs: mapAllOutputs(CurrencyNBR.from(10.5).mult(2).commit(0)),
+                code: "CurrencyNBR.from('10.5').mult(2).commit(0).toHTML()",
+                outputs: mapAllOutputs(CurrencyNBR.from("10.5").mult(2).commit(0)),
             },
             {
                 title: "Baskhara (Fragmento)",
                 context: "delta = (-5)^2 - 4*1*6",
-                code: "CurrencyNBR.from(-5).pow(2).sub(CurrencyNBR.from(4).mult(1).mult(6)).commit(0).toHTML()",
-                outputs: mapAllOutputs(CurrencyNBR.from(-5).pow(2).sub(CurrencyNBR.from(4).mult(1).mult(6)).commit(0)),
+                code: "CurrencyNBR.from('-5').pow(2).sub(CurrencyNBR.from(4).mult(1).mult(6)).commit(0).toHTML()",
+                outputs: mapAllOutputs(CurrencyNBR.from("-5").pow(2).sub(CurrencyNBR.from(4).mult(1).mult(6)).commit(0)),
             },
             {
                 title: "Divisões Aninhadas",
@@ -188,8 +183,8 @@ const getCategorizedExamples = () => {
             {
                 title: "Cenário de Desconto",
                 context: "1000 - 15%",
-                code: "CurrencyNBR.from(1000).sub(CurrencyNBR.from(1000).mult(0.15).group()).commit(0).toVerbalA11y()",
-                outputs: mapAllOutputs(CurrencyNBR.from(1000).sub(CurrencyNBR.from(1000).mult(0.15).group()).commit(0)),
+                code: "CurrencyNBR.from(1000).sub(CurrencyNBR.from(1000).mult('0.15').group()).commit(0).toVerbalA11y()",
+                outputs: mapAllOutputs(CurrencyNBR.from(1000).sub(CurrencyNBR.from(1000).mult("0.15").group()).commit(0)),
             },
         ],
         toUnicode: [
@@ -223,9 +218,9 @@ const getCategorizedExamples = () => {
                 title: "Auditabilidade em Imagem",
                 context: "Juros Compostos",
                 code:
-                    "CurrencyNBR.from(1000).mult(CurrencyNBR.from(1).add(0.05).group().pow(12)).commit(0).toImageBuffer()",
+                    "CurrencyNBR.from(1000).mult(CurrencyNBR.from(1).add('0.05').group().pow(12)).commit(0).toImageBuffer()",
                 outputs: mapAllOutputs(
-                    CurrencyNBR.from(1000).mult(CurrencyNBR.from(1).add(0.05).group().pow(12)).commit(0),
+                    CurrencyNBR.from(1000).mult(CurrencyNBR.from(1).add("0.05").group().pow(12)).commit(0),
                 ),
             },
             {
@@ -236,6 +231,51 @@ const getCategorizedExamples = () => {
                 outputs: mapAllOutputs(
                     CurrencyNBR.from(1).pow("1/2").div(CurrencyNBR.from(2).mult(1).group()).commit(0),
                 ),
+            },
+        ],
+        divInt: [
+            {
+                title: "Divisão Inteira",
+                context: "10 // 3",
+                code: "CurrencyNBR.from(10).divInt(3).commit(0).toLaTeX()",
+                outputs: mapAllOutputs(CurrencyNBR.from(10).divInt(3).commit(0)),
+            },
+            {
+                title: "Rateio Inteiro",
+                context: "100 // 3",
+                code: "CurrencyNBR.from(100).divInt(3).commit(0).toUnicode()",
+                outputs: mapAllOutputs(CurrencyNBR.from(100).divInt(3).commit(0)),
+            },
+        ],
+        mod: [
+            {
+                title: "Cálculo de Módulo",
+                context: "10 % 3",
+                code: "CurrencyNBR.from(10).mod(3).commit(0).toLaTeX()",
+                outputs: mapAllOutputs(CurrencyNBR.from(10).mod(3).commit(0)),
+            },
+            {
+                title: "Resto de Rateio",
+                context: "100 % 3",
+                code: "CurrencyNBR.from(100).mod(3).commit(0).toUnicode()",
+                outputs: mapAllOutputs(CurrencyNBR.from(100).mod(3).commit(0)),
+            },
+        ],
+        toJson: [
+            {
+                title: "Exportação Completa",
+                context: "Resumo de Cálculo",
+                code: "CurrencyNBR.from(100).add(50).commit(2).toJson()",
+                outputs: mapAllOutputs(CurrencyNBR.from(100).add(50).commit(2)),
+            },
+            {
+                title: "Exportação Seletiva",
+                context: "Apenas String e LaTeX",
+                code: "CurrencyNBR.from(100).add(50).commit(2).toJson(['toString', 'toLaTeX'])",
+                outputs: {
+                    ...mapAllOutputs(CurrencyNBR.from(100).add(50).commit(2)),
+                    toJson: CurrencyNBR.from(100).add(50).commit(2).toJson(["toString", "toLaTeX"]),
+                },
             },
         ],
     };

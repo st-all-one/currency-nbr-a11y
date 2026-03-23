@@ -190,18 +190,27 @@ button {
 
 /* Views */
 .binary-view,
-.binary-view-small {
+.binary-view-small,
+.json-view {
     font-family: monospace;
     font-size: 0.75rem;
-    color: #666;
-    background: #eee;
-    padding: 5px;
-    overflow-y: auto;
-    overflow-x: auto;
-    max-height: 100px;
+    color: #333;
+    background: #f4f4f4;
+    padding: 10px;
+    overflow: auto;
+    max-height: 200px;
     margin-bottom: 10px;
     word-break: break-all;
     white-space: pre-wrap;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.json-view {
+    font-size: 0.85rem;
+    background: #fff;
+    color: var(--primary);
+    max-height: 300px;
 }
 
 .image-output-wrapper {
