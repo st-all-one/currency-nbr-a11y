@@ -5,6 +5,39 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>CurrencyNBR - Demonstração Completa de Auditabilidade</title>
         <link rel="stylesheet" href="style.css">
+        <style>
+            .group-main-header {
+                margin-top: 5rem;
+                padding-bottom: 10px;
+                border-bottom: 3px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-size: 2.5rem;
+                color: var(--text);
+                text-transform: none;
+                letter-spacing: normal;
+                box-shadow: none;
+                background: none;
+            }
+            .group-main-header::before {
+                content: "";
+                display: block;
+                width: 20px;
+                height: 40px;
+                background: var(--primary);
+            }
+            .nav-group-title {
+                width: 100%;
+                font-weight: bold;
+                color: var(--primary);
+                margin-top: 15px;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                border-bottom: 1px solid var(--border);
+                padding-bottom: 5px;
+            }
+        </style>
     </head>
 
     <body>
@@ -17,19 +50,30 @@
 
         <nav aria-label="Navegação rápida">
             <ul class="nav-links">
-                <li><a href="#sec-interactive">1. Interativo</a></li>
-                <li><a href="#sec-toString">2. toString</a></li>
-                <li><a href="#sec-toFloatNumber">3. toFloatNumber</a></li>
-                <li><a href="#sec-toBigInt">4. toBigInt</a></li>
-                <li><a href="#sec-toMonetary">5. toMonetary</a></li>
-                <li><a href="#sec-toLaTeX">6. toLaTeX</a></li>
-                <li><a href="#sec-toHTML">7. toHTML</a></li>
-                <li><a href="#sec-toVerbalA11y">8. toVerbalA11y</a></li>
+                <li><a href="#sec-interactive">1. interactive</a></li>
+                
+                <li class="nav-group-title">Outputs</li>
+                <li><a href="#sec-verbalMonetary">1. locale</a></li>
+                <li><a href="#sec-roundingShowcase">2. Rounding</a></li>
+                <li><a href="#sec-toString">3. toString</a></li>
+                <li><a href="#sec-toFloatNumber">4. toFloatNumber</a></li>
+                <li><a href="#sec-toBigInt">5. toBigInt</a></li>
+                <li><a href="#sec-toMonetary">6. toMonetary</a></li>
+                <li><a href="#sec-toLaTeX">7. toLaTeX</a></li>
+                <li><a href="#sec-toHTML">8. toHTML</a></li>
                 <li><a href="#sec-toUnicode">9. toUnicode</a></li>
-                <li><a href="#sec-toImageBuffer">10. toImageBuffer</a></li>
-                <li><a href="#sec-divInt">11. divInt</a></li>
-                <li><a href="#sec-mod">12. mod</a></li>
-                <li><a href="#sec-toJson">13. toJson</a></li>
+                <li><a href="#sec-toVerbalA11y">10. toVerbalA11y</a></li>
+                <li><a href="#sec-toImageBuffer">11. toImageBuffer</a></li>
+                <li><a href="#sec-toJson">12. toJson</a></li>
+
+                <li class="nav-group-title">Operações</li>
+                <li><a href="#sec-add">add</a></li>
+                <li><a href="#sec-sub">sub</a></li>
+                <li><a href="#sec-mult">mult</a></li>
+                <li><a href="#sec-pow">pow</a></li>
+                <li><a href="#sec-mod">mod</a></li>
+                <li><a href="#sec-divInt">divInt</a></li>
+                <li><a href="#sec-group">group</a></li>
             </ul>
         </nav>
 
@@ -74,7 +118,7 @@ CurrencyNBR.from("50000.00")
     )
     
     // 4. Fecha a expressão matemática geral e gera o output auditável
-    .group()
+
     .commit(2)</textarea>
                             <small>Use a sintaxe da biblioteca: <code
                                 >CurrencyNBR.from(val).add(x).commit(n)</code></small>
