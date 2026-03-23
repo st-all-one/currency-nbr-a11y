@@ -1,52 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" dir="ltr">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>CurrencyNBR - Demonstração Completa de Auditabilidade</title>
         <link rel="stylesheet" href="style.css">
-        <style>
-            .group-main-header {
-                margin-top: 5rem;
-                padding-bottom: 10px;
-                border-bottom: 3px solid var(--border);
-                display: flex;
-                align-items: center;
-                gap: 15px;
-                font-size: 2.5rem;
-                color: var(--text);
-                text-transform: none;
-                letter-spacing: normal;
-                box-shadow: none;
-                background: none;
-            }
-            .group-main-header::before {
-                content: "";
-                display: block;
-                width: 20px;
-                height: 40px;
-                background: var(--primary);
-            }
-            .nav-group-title {
-                width: 100%;
-                font-weight: bold;
-                color: var(--primary);
-                margin-top: 15px;
-                font-size: 0.9rem;
-                text-transform: uppercase;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 5px;
-            }
-        </style>
+
     </head>
 
     <body>
         <div id="barra-acessibilidade" role="region" aria-label="Barra de Acessibilidade">
             <ul id="atalhos">
-                <li><a href="#main-content" accesskey="1">Ir para o conteúdo [1]</a></li>
-                <li><a href="#menu-principal" accesskey="2">Ir para o menu [2]</a></li>
-                <li><a href="#f" accesskey="3">Ir para a busca/simulação [3]</a></li>
-                <li><a href="#footer" accesskey="4">Ir para o rodapé [4]</a></li>
+                <li><a href="#menu-principal" accesskey="1">Ir para o conteúdo [1]</a></li>
+                <li><a href="#footer" accesskey="2">Ir para o rodapé [2]</a></li>
             </ul>
             <ul id="opcoes-acessibilidade">
                 <li>
@@ -56,7 +22,7 @@
             </ul>
         </div>
 
-        <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+        <a href="#menu-principal" class="skip-link">Pular para o conteúdo principal</a>
 
         <header role="banner">
             <h1>CurrencyNBR: Showcase de Auditabilidade</h1>
@@ -97,25 +63,23 @@
             <section id="sec-interactive" aria-labelledby="h-interactive">
                 <h2 id="h-interactive">1. Simulador Interativo (Manual)</h2>
                 <div class="interactive-container">
-                    <form id="f" class="simulator-form">
+                    <form id="f" class="simulator-form" onsubmit="return false;">
                         <div class="form-group full-width">
                             <label for="expr">Expressão de Cálculo (TypeScript):</label>
                             <textarea
                                 id="expr"
                                 name="expression"
-                                rows="30"
+                                rows="25"
                                 placeholder="Ex: CurrencyNBR.from(1000).mult(1.05).pow(12).commit(2)"
                             >
 CurrencyNBR.from("50000.00")
     // ============================================
     // Exemplo: Liquidação de Debênture em Atraso
     // ============================================
-    
     // 1. Montante Bruto Atualizado: P * (1 + 0.12)^(34/252)
     .mult(
         CurrencyNBR.from("1").add("0.12").group().pow("34/252")
     )
-    
     // 2. Subtrai o IRRF sobre o lucro: - [ (Bruto - P) * 0.225 ]
     .sub(
         CurrencyNBR.from("50000.00")
@@ -126,24 +90,26 @@ CurrencyNBR.from("50000.00")
             .group()
             .mult("0.225")
     )
-    
     // 3. Adiciona a multa fixa: + (P * 0.02)
     .add(
         CurrencyNBR.from("50000.00").mult("0.02")
     )
-    
     // 4. Fecha a expressão matemática geral e gera o output auditável
-
+    .group()
     .commit(2)</textarea>
                             <small>Use a sintaxe da biblioteca: <code
                                 >CurrencyNBR.from(val).add(x).commit(n)</code></small>
                         </div>
-                        <button type="submit">Executar e Gerar Auditoria</button>
+                        <button type="button" id="btn-executar">Executar e Gerar Auditoria</button>
                     </form>
 
                     <div id="res-box" class="interactive-results" aria-live="polite">
                         <h3>Resultados em Tempo Real</h3>
                         <div class="output-grid" id="interactive-outputs">
+                            <div class="output-item full-width" data-type="toHTML">
+                                <strong>toHTML():</strong>
+                                <div class="val-math">--</div>
+                            </div>
                             <div class="output-item" data-type="toString">
                                 <strong>toString():</strong>
                                 <span class="val">--</span>
@@ -171,10 +137,6 @@ CurrencyNBR.from("50000.00")
                             <div class="output-item full-width" data-type="toVerbalA11y">
                                 <strong>toVerbalA11y():</strong>
                                 <span class="val">--</span>
-                            </div>
-                            <div class="output-item full-width" data-type="toHTML">
-                                <strong>toHTML():</strong>
-                                <div class="val-math">--</div>
                             </div>
                             <div class="output-item full-width" data-type="toImageBuffer">
                                 <strong>toImageBuffer():</strong>
@@ -212,22 +174,6 @@ CurrencyNBR.from("50000.00")
         </script>
 
         <!-- High Contrast & Common Scripts -->
-        <script>
-            // Alto Contraste (Persistente)
-            const contrastBtn = document.getElementById("alto-contraste");
-            contrastBtn.addEventListener("click", (e) => {
-                e.preventDefault();
-                const isPressed = contrastBtn.getAttribute("aria-pressed") === "true";
-                document.body.classList.toggle("alto-contraste");
-                contrastBtn.setAttribute("aria-pressed", !isPressed);
-                localStorage.setItem("altoContraste", !isPressed);
-            });
-
-            if (localStorage.getItem("altoContraste") === "true") {
-                document.body.classList.add("alto-contraste");
-                contrastBtn.setAttribute("aria-pressed", "true");
-            }
-        </script>
         <script src="script.js" type="module"></script>
     </body>
 </html>

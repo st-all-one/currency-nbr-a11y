@@ -155,40 +155,67 @@ async function loadExamples() {
     }
 }
 
-// Formulário de simulação
-const simulationForm = document.getElementById("f");
-if (simulationForm) {
-    simulationForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = simulationForm.querySelector("button");
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "Processando...";
+// Inicialização
+function init() {
+    // 1. Carregar Exemplos
+    loadExamples();
 
-        const payload = {
-            expression: document.getElementById("expr").value,
-        };
+    // 2. Configurar Formulário de Simulação (Bloqueio Total)
+    const btnExecutar = document.getElementById("btn-executar");
+    if (btnExecutar) {
+        btnExecutar.addEventListener("click", async () => {
+            const originalText = btnExecutar.textContent;
+            btnExecutar.disabled = true;
+            btnExecutar.textContent = "Processando...";
 
-        try {
-            const response = await fetch("/api/calculate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            if (data.error) {
-                alert("Erro na expressão: " + data.error);
-            } else {
-                updateInteractiveDisplay(data);
+            const payload = {
+                expression: document.getElementById("expr").value,
+            };
+
+            try {
+                const response = await fetch("/api/calculate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert("Erro na expressão: " + data.error);
+                } else {
+                    updateInteractiveDisplay(data);
+                }
+            } catch (err) {
+                console.error("Erro no cálculo:", err);
+                alert("Erro ao conectar com o servidor.");
+            } finally {
+                btnExecutar.disabled = false;
+                btnExecutar.textContent = originalText;
             }
-        } catch (err) {
-            console.error("Erro no cálculo:", err);
-            alert("Erro ao conectar com o servidor.");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = originalText;
+        });
+    }
+
+    // 3. Configurar Alto Contraste
+    const contrastBtn = document.getElementById("alto-contraste");
+    if (contrastBtn) {
+        contrastBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isPressed = contrastBtn.getAttribute("aria-pressed") === "true";
+            document.body.classList.toggle("alto-contraste");
+            contrastBtn.setAttribute("aria-pressed", !isPressed);
+            localStorage.setItem("altoContraste", !isPressed);
+        });
+
+        if (localStorage.getItem("altoContraste") === "true") {
+            document.body.classList.add("alto-contraste");
+            contrastBtn.setAttribute("aria-pressed", "true");
         }
-    };
+    }
 }
 
-document.addEventListener("DOMContentLoaded", loadExamples);
+// Garantir que a inicialização ocorra após o DOM estar pronto
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+} else {
+    init();
+}
+
