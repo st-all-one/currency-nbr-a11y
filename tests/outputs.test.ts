@@ -146,4 +146,30 @@ describe("Outputs Exaustivos (Unit)", () => {
             expect(data.toMonetary).toBeUndefined();
         });
     });
+
+    describe("toCustomOutput", () => {
+        it("deve permitir acesso via context.data e context.util", () => {
+            const result = output.toCustomOutput((ctx) => {
+                return `Valor: ${ctx.data.value}, LaTeX: ${ctx.util.toLaTeX().length > 0}`;
+            });
+            expect(result).toContain("Valor: 150750000000000");
+            expect(result).toContain("LaTeX: true");
+        });
+
+        it("deve permitir acesso via 'this'", function () {
+            const result = output.toCustomOutput(function () {
+                // @ts-ignore: Testando acesso via this
+                return this.toLaTeX();
+            });
+            expect(result).toBe(output.toLaTeX());
+        });
+
+        it("deve suportar retorno assíncrono (Promise)", async () => {
+            const result = await output.toCustomOutput(async (_ctx) => {
+                return new Uint8Array([1, 2, 3]);
+            });
+            expect(result).toBeInstanceOf(Uint8Array);
+            expect(result).toEqual(new Uint8Array([1, 2, 3]));
+        });
+    });
 });

@@ -14,6 +14,7 @@ import { LOCALE_CURRENCY_MAP } from "./output_helpers/locales.ts";
 import { CurrencyNBRError } from "./errors.ts";
 import { Logger } from "./logger.ts";
 import { toSubscript } from "./internal/subscript.ts";
+import type { ICurrencyNBRCustomOutput } from "./output_helpers/custom_formatter.ts";
 
 /**
  * Métodos de saída disponíveis para a classe CurrencyNBROutput.
@@ -321,6 +322,39 @@ export class CurrencyNBROutput {
             calcTime: end - start,
             elements: targetElements,
         });
+        return result;
+    }
+
+    /**
+     * Ponto de saída agnóstico que permite total controle sobre os dados e métodos internos.
+     * Ideal para implementações de protocolos (Protobuf), integrações externas ou
+     * exportações complexas.
+     *
+     * @param processor Função ou interface que processa a saída.
+     * @returns O resultado no formato definido pelo desenvolvedor.
+     */
+    public toCustomOutput<Toutput>(
+        processor: ICurrencyNBRCustomOutput<Toutput>,
+    ): Toutput {
+        const start = performance.now();
+
+        const result = processor.call(this, {
+            rawData: {
+                value: this.value,
+                decimalPrecision: this.defaultDecimals,
+                latexExpression: this.latexExpression,
+                verbalExpression: this.verbalExpression,
+                unicodeExpression: this.unicodeExpression,
+                options: this.options,
+            },
+            method: this,
+        });
+
+        const end = performance.now();
+        Logger.getChild(["output", "toCustomOutput"]).info("Custom output generated {*}", {
+            calcTime: end - start,
+        });
+
         return result;
     }
 

@@ -66,8 +66,14 @@ export function calculateNthRoot(value: bigint, rootIndex: bigint): bigint {
     const isValueNegative = value < 0n;
     const absoluteValue = isValueNegative ? -value : value;
 
-    // Estimativa inicial baseada no comprimento do número
-    let currentGuess = 10n ** (BigInt(absoluteValue.toString().length) / rootIndex + 1n);
+    // Estimativa inicial puramente binária (baseada no bit shift)
+    // guess = 2 ^ (bit_length / rootIndex)
+    const bitLength = getBitLength(absoluteValue);
+    let currentGuess = 1n << (bitLength / rootIndex);
+
+    if (currentGuess === 0n) {
+        currentGuess = 1n;
+    }
 
     while (true) {
         const previousGuess = currentGuess;
@@ -124,4 +130,28 @@ export function calculateFractionalPower(base: bigint, num: bigint, den: bigint,
     }
 
     return calculateNthRoot(radicand, den);
+}
+
+/**
+ * Estima a quantidade de bits necessários para representar um BigInt.
+ * Muito mais rápido que `.toString(2).length` ou `.toString(10).length`.
+ */
+function getBitLength(value: bigint): bigint {
+    if (value === 0n) { return 0n; }
+
+    let bits = 1n;
+    let temp = value;
+
+    // Desloca 64 bits de uma vez para devorar números enormes muito rápido
+    while (temp >= 18446744073709551616n) { // 2^64
+        temp >>= 64n;
+        bits += 64n;
+    }
+    // Desloca os bits restantes 1 a 1
+    while (temp >= 2n) {
+        temp >>= 1n;
+        bits += 1n;
+    }
+
+    return bits;
 }

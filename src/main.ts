@@ -109,16 +109,24 @@ export class CurrencyNBR {
         const start = performance.now();
         try {
             const other = CurrencyNBR.from(value);
+            const otherValue = other.accumulatedValue + other.activeTermValue;
             const newAccumulatedValue = this.accumulatedValue + this.activeTermValue;
+
+            const nextActiveExpr = wrapLaTeX(other.getFullLaTeXExpression());
+            const nextActiveUnicode = wrapUnicode(other.getFullUnicodeExpression());
+            const nextActiveVerbal = other.accumulatedVerbal
+                ? `${VERBAL_TOKENS.GRP_START}${other.getFullVerbalExpression()}${VERBAL_TOKENS.GRP_END}`
+                : other.activeTermVerbal;
+
             const result = new CurrencyNBR(
                 newAccumulatedValue,
-                other.accumulatedValue + other.activeTermValue,
+                otherValue,
                 this.getFullLaTeXExpression(),
-                other.activeTermExpression,
+                nextActiveExpr,
                 this.getFullVerbalExpression(),
-                other.activeTermVerbal,
+                nextActiveVerbal,
                 this.getFullUnicodeExpression(),
-                other.activeTermUnicode,
+                nextActiveUnicode,
             );
             const end = performance.now();
             getLogger(["currency-nbr-a11y", "engine", "add"]).debug("Addition performed {*}", {
@@ -129,7 +137,7 @@ export class CurrencyNBR {
                 },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
                 activeTerm: result.activeTermValue.toString(),
-                addingValue: (other.accumulatedValue + other.activeTermValue).toString(),
+                addingValue: otherValue.toString(),
             });
             return result;
         } catch (e) {
@@ -146,15 +154,24 @@ export class CurrencyNBR {
             const other = CurrencyNBR.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             const newAccumulatedValue = this.accumulatedValue + this.activeTermValue;
+
+            const nextActiveExpr = `- ${wrapLaTeX(other.getFullLaTeXExpression())}`;
+            const nextActiveUnicode = `- ${wrapUnicode(other.getFullUnicodeExpression())}`;
+            const nextActiveVerbal = `${VERBAL_TOKENS.SUB}${
+                other.accumulatedVerbal
+                    ? `${VERBAL_TOKENS.GRP_START}${other.getFullVerbalExpression()}${VERBAL_TOKENS.GRP_END}`
+                    : other.activeTermVerbal
+            }`;
+
             const result = new CurrencyNBR(
                 newAccumulatedValue,
                 -otherValue,
                 this.getFullLaTeXExpression(),
-                `- ${other.activeTermExpression}`,
+                nextActiveExpr,
                 this.getFullVerbalExpression(),
-                `${VERBAL_TOKENS.SUB}${other.activeTermVerbal}`,
+                nextActiveVerbal,
                 this.getFullUnicodeExpression(),
-                `- ${other.activeTermUnicode}`,
+                nextActiveUnicode,
             );
             const end = performance.now();
             getLogger(["currency-nbr-a11y", "engine", "sub"]).debug("Subtraction performed {*}", {
@@ -394,7 +411,34 @@ export class CurrencyNBR {
 
             const expStr = exponent.toString();
             if (expStr.includes("/")) {
-                const [num, den] = expStr.split("/").map((s) => BigInt(s.trim()));
+                const parts = expStr.split("/");
+
+                // 1. Validação rigorosa do formato fracionário (Prevenindo o "1 / 2 / 3")
+                if (parts.length !== 2) {
+                    throw new CurrencyNBRError({
+                        type: "invalid-fractional-exponent",
+                        title: "Expoente Fracionário Inválido",
+                        detail:
+                            `O expoente '${expStr}' é inválido. Um expoente fracionário deve conter exatamente um numerador e um denominador separados por uma única barra (ex: '1/2').`,
+                        operation: "pow",
+                    });
+                }
+
+                // 2. Só agora tentamos converter para BigInt
+                // Usamos try/catch aqui caso o usuário mande algo como "1 / abc"
+                let num: bigint;
+                let den: bigint;
+                try {
+                    num = BigInt(parts[0].trim());
+                    den = BigInt(parts[1].trim());
+                } catch {
+                    throw new CurrencyNBRError({
+                        type: "invalid-exponent-value",
+                        title: "Valor de Expoente Inválido",
+                        detail: `Não foi possível converter as partes do expoente '${expStr}' para números inteiros.`,
+                        operation: "pow",
+                    });
+                }
                 nextValue = calculateFractionalPower(baseValue, num, den, INTERNAL_SCALE_FACTOR);
 
                 const denSup = toSuperscript(den.toString());
@@ -528,7 +572,7 @@ export class CurrencyNBR {
         if (this.accumulatedVerbal && this.activeTermVerbal) {
             // Verifica se o termo ativo já começa com token de subtração (negativo)
             // Se sim, usa espaço, senão usa ADD
-            verbal += this.activeTermVerbal.includes(VERBAL_TOKENS.SUB) ? " " : VERBAL_TOKENS.ADD;
+            verbal += this.activeTermVerbal.startsWith(VERBAL_TOKENS.SUB) ? " " : VERBAL_TOKENS.ADD;
         }
         verbal += this.activeTermVerbal;
         return verbal;
