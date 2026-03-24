@@ -44,58 +44,82 @@ export function calculateBigIntPower(base: bigint, exponent: bigint): bigint {
  * @param rootIndex O índice da raiz (ex: 2 para quadrada, 3 para cúbica).
  * @returns A parte inteira da raiz calculada.
  */
-export function calculateNthRoot(value: bigint, rootIndex: bigint): bigint {
-    if (rootIndex <= 0n) {
-        throw new CurrencyNBRError({
-            type: "invalid-root-index",
-            title: "Operação de Raiz Inválida",
-            detail: "O índice da raiz deve ser um número inteiro positivo.",
-            operation: "root",
-        });
-    }
-    if (value < 0n && rootIndex % 2n === 0n) {
-        throw new CurrencyNBRError({
-            type: "even-root-of-negative",
-            title: "Operação de Raiz Inválida",
-            detail: "Não é possível calcular a raiz par de um número negativo (resultado complexo não suportado).",
-            operation: "root",
-        });
-    }
-    if (value === 0n) { return 0n; }
+ export function calculateNthRoot(value: bigint, rootIndex: bigint): bigint {
+   if (rootIndex <= 0n) {
+       throw new CurrencyNBRError({
+           type: "invalid-root-index",
+           title: "Operação de Raiz Inválida",
+           detail: "O índice da raiz deve ser um número inteiro positivo.",
+           operation: "root",
+       });
+   }
+   if (value < 0n && rootIndex % 2n === 0n) {
+       throw new CurrencyNBRError({
+           type: "even-root-of-negative",
+           title: "Operação de Raiz Inválida",
+           detail: "Não é possível calcular a raiz par de um número negativo (resultado complexo não suportado).",
+           operation: "root",
+       });
+   }
+   if (rootIndex === 1n) return value;
 
-    const isValueNegative = value < 0n;
-    const absoluteValue = isValueNegative ? -value : value;
+       const isValueNegative = value < 0n;
+       const absoluteValue = isValueNegative ? -value : value;
 
-    // Estimativa inicial puramente binária (baseada no bit shift)
-    // guess = 2 ^ (bit_length / rootIndex)
-    const bitLength = getBitLength(absoluteValue);
-    let currentGuess = 1n << (bitLength / rootIndex);
+       if (isValueNegative && rootIndex % 2n === 0n) {
+           throw new CurrencyNBRError({ type: "even-root-of-negative", operation: "root" });
+       }
 
-    if (currentGuess === 0n) {
-        currentGuess = 1n;
-    }
+       // 2. Estimativa inicial otimizada (Overestimate obrigatório)
+       const bitLength = getBitLengthFast(absoluteValue);
+       let currentGuess = 1n << (bitLength / rootIndex + 1n);
 
-    while (true) {
-        const previousGuess = currentGuess;
-        const guessPowMinusOne = previousGuess ** (rootIndex - 1n);
+       // 3. SELETOR DE MOTOR
+       // Índices baixos (ex: até 10) -> Newton-Raphson (Velocidade Pura)
+       // Índices altos -> Busca Binária (Estabilidade Pura)
+       if (rootIndex <= 10n) {
+           while (true) {
+               const previousGuess = currentGuess;
+               // Usamos o operador ** aqui pois em índices baixos o V8 é muito otimizado
+               const guessPowMinusOne = previousGuess ** (rootIndex - 1n);
 
-        // Fórmula de Newton: x_{n+1} = ((k-1)x_n + A / x_n^{k-1}) / k
-        currentGuess = ((rootIndex - 1n) * previousGuess + absoluteValue / guessPowMinusOne)
-            / rootIndex;
+               // Newton-Raphson Step
+               currentGuess = ((rootIndex - 1n) * previousGuess + absoluteValue / guessPowMinusOne) / rootIndex;
 
-        // Verifica convergência (estabilidade entre -1 e 1)
-        if (currentGuess >= previousGuess - 1n && currentGuess <= previousGuess + 1n) { break; }
-    }
+               // Condição de parada para inteiros
+               if (currentGuess >= previousGuess - 1n && currentGuess <= previousGuess + 1n) break;
+           }
 
-    // Ajuste fino para garantir a maior raiz inteira que satisfaça r^n <= x
-    if (currentGuess ** rootIndex > absoluteValue) {
-        while (currentGuess ** rootIndex > absoluteValue) { currentGuess--; }
-    } else {
-        while ((currentGuess + 1n) ** rootIndex <= absoluteValue) { currentGuess++; }
-    }
+           // Ajuste fino final para truncamento de inteiro
+           if (currentGuess ** rootIndex > absoluteValue) {
+               while (currentGuess ** rootIndex > absoluteValue) currentGuess--;
+           } else {
+               while ((currentGuess + 1n) ** rootIndex <= absoluteValue) currentGuess++;
+           }
+           return isValueNegative ? -currentGuess : currentGuess;
 
-    return isValueNegative ? -currentGuess : currentGuess;
-}
+       } else {
+           // MOTOR DE BUSCA BINÁRIA (Safe Path)
+           let low = 1n;
+           let high = currentGuess; // Reutiliza a estimativa de bit shift como teto
+           let bestGuess = 1n;
+
+           while (low <= high) {
+               const mid = (low + high) >> 1n; // Bit shift para divisão por 2 ultra-rápida
+               const midPow = calculateBigIntPower(mid, rootIndex);
+
+               if (midPow === absoluteValue) return isValueNegative ? -mid : mid;
+
+               if (midPow < absoluteValue) {
+                   bestGuess = mid;
+                   low = mid + 1n;
+               } else {
+                   high = mid - 1n;
+               }
+           }
+           return isValueNegative ? -bestGuess : bestGuess;
+       }
+   }
 
 /**
  * Calcula a potência fracionária de um BigInt com um fator de escala.
@@ -133,10 +157,10 @@ export function calculateFractionalPower(base: bigint, num: bigint, den: bigint,
 }
 
 /**
- * Estima a quantidade de bits necessários para representar um BigInt.
- * Muito mais rápido que `.toString(2).length` ou `.toString(10).length`.
+ * Estima a quantidade de bits de um BigInt de forma ultra-rápida.
+ * Utiliza conversão hexadecimal para evitar os gargalos do Garbage Collector.
  */
-function getBitLength(value: bigint): bigint {
+function getBitLengthFast(value: bigint): bigint {
     if (value === 0n) { return 0n; }
 
     let bits = 1n;

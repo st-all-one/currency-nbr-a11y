@@ -1,4 +1,4 @@
-import type { CurrencyNBROutput } from "@stallone-dev/currency-nbr-a11y";
+import type { CurrencyNBROutput } from "../output.ts";
 import type { CurrencyNBROutputOptions } from "./options.ts";
 
 /**

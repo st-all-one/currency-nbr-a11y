@@ -533,6 +533,14 @@ export class CurrencyNBR {
         options?: CurrencyNBROutputOptions,
     ): CurrencyNBROutput {
         const start = performance.now();
+        if (decimals < 0 || !Number.isInteger(decimals)) {
+            throw new CurrencyNBRError({
+                type: "invalid-precision",
+                title: "Precisão Decimal Inválida",
+                detail: `O número de casas decimais deve ser um inteiro positivo. Recebido: ${decimals}`,
+                operation: "commit"
+            });
+        }
         try {
             const finalValue = this.accumulatedValue + this.activeTermValue;
             const result = new CurrencyNBROutput(

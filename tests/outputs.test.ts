@@ -150,7 +150,7 @@ describe("Outputs Exaustivos (Unit)", () => {
     describe("toCustomOutput", () => {
         it("deve permitir acesso via context.data e context.util", () => {
             const result = output.toCustomOutput((ctx) => {
-                return `Valor: ${ctx.data.value}, LaTeX: ${ctx.util.toLaTeX().length > 0}`;
+                return `Valor: ${ctx.rawData.value}, LaTeX: ${ctx.method.toLaTeX().length > 0}`;
             });
             expect(result).toContain("Valor: 150750000000000");
             expect(result).toContain("LaTeX: true");
