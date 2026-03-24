@@ -581,6 +581,26 @@ button:active {
         grid-area: footer;
     }
 
+    footer .credits {
+        margin-top: 1rem;
+        display: block;
+    }
+
+    footer .credits a {
+        color: var(--primary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    footer .credits a:hover {
+        text-decoration: underline;
+        color: var(--accent);
+    }
+
     #menu-principal {
         grid-area: sidebar;
         position: sticky;

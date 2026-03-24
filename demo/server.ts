@@ -84,6 +84,11 @@ export default Deno.serve({ port: 8000 }, async (req) => {
     return serveFile(fontPath);
   }
 
+  if (url.pathname.startsWith("/styles/")) {
+    const fontPath = join(ROOT, url.pathname);
+    return serveFile(fontPath);
+  }
+
   if (url.pathname.includes("favicon")) {
     const fontPath = join(ROOT, "assets", url.pathname);
     return serveFile(fontPath);
