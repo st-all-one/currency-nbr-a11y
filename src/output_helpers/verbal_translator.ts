@@ -2,11 +2,25 @@ import type { LocaleLang } from "./options.ts";
 import { VERBAL_TOKENS, VERBAL_TRANSLATIONS } from "./i18n.ts";
 
 /**
+ * @module VerbalTranslator
+ * Motor de tradução e localização para descrições matemáticas acessíveis.
+ *
+ * Este componente transforma a expressão tokenizada (agnóstica a idioma) em
+ * uma frase gramaticalmente correta no locale alvo, incluindo suporte a
+ * diferentes separadores decimais (vírgula vs ponto).
+ */
+
+/**
  * Traduz a expressão verbal tokenizada para o locale especificado.
+ *
+ * Realiza a substituição de tokens de operação por termos naturais e
+ * formata os números internos para respeitar as convenções regionais.
+ *
  * @param template A string contendo tokens (ex: "10{#ADD#}20").
- * @param resultValue O valor final calculado formatado como string decimal (ex: "30.00").
- * @param locale O idioma alvo.
+ * @param resultValue O valor final calculado formatado como string decimal.
+ * @param locale O idioma alvo (ex: "pt-BR", "en-US").
  * @param roundingMethod O nome do método de arredondamento utilizado.
+ * @returns A descrição verbal completa e localizada.
  */
 export function translateVerbal(
     template: string,
@@ -18,27 +32,19 @@ export function translateVerbal(
     let output = template;
 
     // 1. Substituir Tokens de Operação
-    // Itera sobre as chaves do dicionário para substituir tokens conhecidos
-    // A ordem importa pouco pois os tokens são únicos
-
-    // Mapeamento reverso manual ou iterar sobre VERBAL_TOKENS
+    // Iteramos sobre todos os tokens conhecidos para garantir a tradução completa da frase.
     const tokens = Object.entries(VERBAL_TOKENS) as [keyof typeof VERBAL_TOKENS, string][];
 
     for (const [key, token] of tokens) {
-        if (key === "COMMA" || key === "ROUNDING") { continue; // Tratamento especial depois
-         }
-        // replaceAll está disponível em ambientes modernos (ES2021+), Deno suporta.
+        if (key === "COMMA" || key === "ROUNDING") { continue; }
         output = output.replaceAll(token, dict[key]);
     }
 
     // 2. Formatar Números na Expressão
-    // A expressão original contém números como "10.50".
-    // Precisamos substituir o ponto decimal pelo separador verbal (ex: " vírgula " ou " point ").
-
-    // Estratégia simples: Substituir todos os pontos que estão entre dígitos.
+    // Números em ponto flutuante (ex: 10.50) são convertidos para a grafia local (ex: 10,50).
     output = output.replace(/(\d)\.(\d)/g, `$1${dict.COMMA}$2`);
 
-    // 3. Adicionar o Resultado Final e o Arredondamento
+    // 3. Adicionar o Resultado Final e Metadados de Arredondamento
     const finalResultVerbal = resultValue.replace(".", dict.COMMA);
     const roundingInfo = `${dict.ROUNDING}${roundingMethod})`;
 

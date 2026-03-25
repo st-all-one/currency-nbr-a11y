@@ -1,26 +1,32 @@
 import { INTERNAL_CALCULATION_PRECISION } from "../constants.ts";
 import { formatBigIntToString } from "./formatting.ts";
-import { type RoundingMethod } from "./options.ts";
+import type { RoundingMethod } from "./options.ts";
 import { applyRounding } from "./rounding_manager.ts";
 
 /**
- * Resultado da operação de arredondamento lazy.
+ * Resultado da operação de arredondamento preguiçoso (lazy).
+ * Consolida tanto o valor numérico quanto a sua representação textual.
  */
 export interface LazyRoundingResult {
     /**
      * O valor BigInt arredondado na escala solicitada (ex: para 2 casas, "1.50" vira 150n).
+     * Ideal para cálculos secundários e armazenamento.
      */
     centsValue: bigint;
 
     /**
      * A representação em string formatada do valor arredondado (ex: "1.50").
+     * Pronto para exibição direta ao usuário.
      */
     stringValue: string;
 }
 
 /**
  * Helper para realizar o arredondamento e formatação de forma preguiçosa (lazy).
- * Converte o valor interno para o formato final desejado em bigint e string.
+ *
+ * Esta função é o coração da otimização de saída da biblioteca CalcAUD,
+ * convertendo o valor interno de alta precisão (12 casas) para o formato
+ * final desejado em uma única passagem.
  *
  * @param value O valor BigInt bruto na escala interna (12 casas).
  * @param decimals O número de casas decimais solicitado para o output.
@@ -40,7 +46,7 @@ export function outputLazyRounding(
         decimals,
     );
 
-    // 2. Converte o BigInt arredondado para String
+    // 2. Converte o BigInt arredondado para String utilizando o helper de formatação manual.
     const stringValue = formatBigIntToString(roundedValue, decimals);
 
     return {

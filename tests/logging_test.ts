@@ -1,10 +1,10 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { configure, type LogRecord, type Sink } from "@logtape";
-import { CurrencyNBR } from "../src/main.ts";
+import { CalcAUD } from "../src/main.ts";
 import { getFileSink } from "@logtape/file";
 
-describe("CurrencyNBR Logging System", () => {
+describe("CalcAUD Logging System", () => {
     const records: LogRecord[] = [];
     const testSink: Sink = (record: LogRecord) => {
         records.push(record);
@@ -18,14 +18,14 @@ describe("CurrencyNBR Logging System", () => {
         },
         filters: {},
         loggers: [
-            { category: ["currency-nbr-a11y"], sinks: ["test", "console"], lowestLevel: "debug" },
+            { category: ["calc-aud-nbr-a11y"], sinks: ["test", "console"], lowestLevel: "debug" },
         ],
     });
 
     describe("Input and Engine", () => {
         it("should log initialization (input) and operations (engine) correctly", () => {
             records.length = 0;
-            const val = CurrencyNBR.from("100").add(50);
+            const val = CalcAUD.from("100").add(50);
             val.commit();
 
             const categories = records.map((r) => r.category.join("."));
@@ -44,7 +44,7 @@ describe("CurrencyNBR Logging System", () => {
     describe("Output Methods", () => {
         it("should log output formatting details (toString, toMonetary, toLaTeX)", () => {
             records.length = 0;
-            const val = CurrencyNBR.from("100").commit();
+            const val = CalcAUD.from("100").commit();
 
             val.toString();
             val.toMonetary();
@@ -69,7 +69,7 @@ describe("CurrencyNBR Logging System", () => {
         it("should log errors with RFC 7807 structure and math_audit details", () => {
             records.length = 0;
             try {
-                CurrencyNBR.from("100").div(0);
+                CalcAUD.from("100").div(0);
             } catch {
                 // erro esperado
             }

@@ -1,17 +1,35 @@
 import { Logger } from "./logger.ts";
 
 /**
- * Custom Error following RFC 7807 (Problem Details for HTTP APIs).
- * Used for tracking and auditing mathematical and operational failures in the library.
+ * Erro customizado seguindo a RFC 7807 (Problem Details for HTTP APIs).
+ *
+ * Esta classe é utilizada para rastreamento e auditoria de falhas matemáticas
+ * e operacionais dentro da biblioteca CalcAUD, garantindo que cada erro possua
+ * um contexto rico para depuração e conformidade fiscal.
+ *
+ * @example
+ * ```ts
+ * throw new CalcAUDError({
+ *   type: "division-by-zero",
+ *   title: "Operação Matemática Inválida",
+ *   detail: "Não é possível dividir um montante por zero.",
+ *   operation: "division"
+ * });
+ * ```
  */
-export class CurrencyNBRError extends Error {
-    public readonly type: string; // URI identifying the problem type
-    public readonly title: string; // Short, human-readable summary
-    public readonly status: number; // HTTP status code suggestion
-    public readonly detail: string; // Specific explanation of this occurrence
-    public readonly instance: string; // Unique URI for this specific occurrence (Audit Log)
+export class CalcAUDError extends Error {
+    /** URI que identifica o tipo do problema. */
+    public readonly type: string;
+    /** Resumo curto e legível do erro. */
+    public readonly title: string;
+    /** Sugestão de código de status HTTP (padrão 400). */
+    public readonly status: number;
+    /** Explicação detalhada sobre esta ocorrência específica. */
+    public readonly detail: string;
+    /** Identificador único da ocorrência (Audit Log ID). */
+    public readonly instance: string;
 
-    // Math Audit Extensions (RFC 7807 allows custom members)
+    /** Extensões de Auditoria Matemática (RFC 7807 permite membros customizados). */
     public readonly math_audit?: {
         latex?: string | undefined;
         unicode?: string | undefined;
@@ -28,16 +46,16 @@ export class CurrencyNBRError extends Error {
         operation?: string;
     }) {
         super(params.detail);
-        this.name = "CurrencyNBRError";
+        this.name = "CalcAUDError";
 
-        // Base RFC 7807 fields
-        this.type = `https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/${params.type}`;
+        // Seguimos a especificação RFC 7807 para que erros sejam serializáveis
+        // e compreensíveis tanto por humanos quanto por sistemas automatizados.
+        this.type = `https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/${params.type}`;
         this.title = params.title;
         this.detail = params.detail;
         this.status = params.status || 400;
         this.instance = `audit:err:${crypto.randomUUID()}`;
 
-        // Custom extensions for traceability
         if (params.latex !== undefined || params.unicode !== undefined || params.operation !== undefined) {
             this.math_audit = {
                 latex: params.latex,
@@ -46,16 +64,17 @@ export class CurrencyNBRError extends Error {
             };
         }
 
-        // Automated logging for recognized errors (ERROR level)
-        // Using direct child logger call as requested
-        Logger.getChild("errors").error(`${this.title} {*}`, {
+        // Telemetria estruturada utilizando logtape.
+        // O uso de 'getChild' permite filtrar erros por categoria no ambiente de produção.
+        Logger.getChild(["errors", params.type]).error(`${this.title} {*}`, {
             ...this.toJSON(),
             timestamp: new Date().toISOString(),
         });
     }
 
     /**
-     * Serializes the error strictly following RFC 7807 structure.
+     * Serializa o erro seguindo estritamente a estrutura da RFC 7807.
+     * @returns Objeto JSON formatado.
      */
     public toJSON(): {
         math_audit?: {
@@ -81,13 +100,25 @@ export class CurrencyNBRError extends Error {
 }
 
 /**
- * Logs unexpected errors as FATAL.
+ * Registra erros inesperados como nível FATAL.
+ *
+ * @param error O objeto de erro capturado.
+ * @param context Contexto adicional para ajudar na depuração.
+ *
+ * @example
+ * ```ts
+ * try {
+ *   // algo perigoso
+ * } catch (e) {
+ *   logFatal(e, { user_id: 123 });
+ * }
+ * ```
  */
 export function logFatal(error: unknown, context?: Record<string, unknown>): void {
     const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;
 
-    // Using direct child logger call for fatal errors
+    // Erros fatais são registrados em um namespace específico para alertas imediatos.
     Logger.getChild(["errors", "fatal"]).fatal(`${message} {*}`, {
         ...context,
         error,

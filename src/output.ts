@@ -4,20 +4,21 @@ import { generateHTML } from "./output_helpers/html_generator.ts";
 import { translateVerbal } from "./output_helpers/verbal_translator.ts";
 import { generateImageBuffer } from "./output_helpers/image_generator.ts";
 import {
-    type CurrencyNBROutputOptions,
+    type CalcAUDOutputOptions,
     DEFAULT_OPTIONS,
     type RoundingMethod,
     VALID_ROUNDING_METHODS,
 } from "./output_helpers/options.ts";
 import { outputLazyRounding } from "./output_helpers/lazy_rounding.ts";
 import { LOCALE_CURRENCY_MAP } from "./output_helpers/locales.ts";
-import { CurrencyNBRError } from "./errors.ts";
+import { CalcAUDError } from "./errors.ts";
 import { Logger } from "./logger.ts";
 import { toSubscript } from "./internal/subscript.ts";
-import type { ICurrencyNBRCustomOutput } from "./output_helpers/custom_formatter.ts";
+import type { ICalcAUDCustomOutput } from "./output_helpers/custom_formatter.ts";
 
 /**
- * Métodos de saída disponíveis para a classe CurrencyNBROutput.
+ * Métodos de saída disponíveis para a classe CalcAUDOutput.
+ * Define todas as formas possíveis de exportar o resultado de um cálculo.
  */
 export const AVAILABLE_OUTPUT_METHODS = [
     "toString",
@@ -33,14 +34,14 @@ export const AVAILABLE_OUTPUT_METHODS = [
 ] as const;
 
 /**
- * Tipo representando as chaves de saída permitidas.
+ * Tipo representando as chaves de saída permitidas na biblioteca CalcAUD.
  */
-export type CurrencyOutputMethod = typeof AVAILABLE_OUTPUT_METHODS[number];
+export type CalcAUDOutputMethod = typeof AVAILABLE_OUTPUT_METHODS[number];
 
 /**
- * Elementos padrão incluídos na exportação JSON.
+ * Elementos padrão incluídos na exportação JSON caso nenhum seja especificado.
  */
-const DEFAULT_JSON_ELEMENTS: CurrencyOutputMethod[] = [
+const DEFAULT_JSON_ELEMENTS: CalcAUDOutputMethod[] = [
     "toString",
     "toCentsInBigInt",
     "toMonetary",
@@ -50,7 +51,7 @@ const DEFAULT_JSON_ELEMENTS: CurrencyOutputMethod[] = [
 ];
 
 /**
- * Siglas para os métodos de arredondamento.
+ * Siglas para os métodos de arredondamento utilizados em representações simbólicas.
  */
 const ROUNDING_ABBREVIATIONS: Record<RoundingMethod, string> = {
     "NBR-5891": "NBR",
@@ -61,17 +62,42 @@ const ROUNDING_ABBREVIATIONS: Record<RoundingMethod, string> = {
 };
 
 /**
- * Classe responsável por formatar e exibir o resultado de um cálculo CurrencyNBR.
+ * Classe responsável por formatar e exibir o resultado final de um cálculo CalcAUD.
+ *
+ * Esta classe utiliza um mecanismo de cache interno para garantir que operações
+ * custosas de arredondamento e formatação sejam realizadas apenas uma vez.
+ *
+ * @example
+ * ```ts
+ * // Exemplo 1: Exportação Monetária
+ * const res = CalcAUD.from(100).add(25.5).commit(2);
+ * console.log(res.toMonetary()); // "R$ 125,50"
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Exemplo 2: Integração com Frontend (LaTeX/HTML)
+ * const res = CalcAUD.from(10).div(3).commit(2);
+ * document.body.innerHTML = res.toHTML(); // Renderiza fórmula bonita via KaTeX
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Exemplo 3: Uso em APIs (JSON)
+ * const res = CalcAUD.from("1234.567").commit(2);
+ * const payload = res.toJson(["toMonetary", "toVerbalA11y"]);
+ * ```
  */
-export class CurrencyNBROutput {
+export class CalcAUDOutput {
     private readonly value: bigint;
     private readonly defaultDecimals: number;
     private readonly latexExpression: string;
     private readonly verbalExpression: string;
     private readonly unicodeExpression: string;
-    private readonly options: Required<CurrencyNBROutputOptions>;
+    private readonly options: Required<CalcAUDOutputOptions>;
 
-    // Cache privado para o arredondamento preguiçoso
+    // Cache privado para o arredondamento preguiçoso (Lazy Rounding)
+    // O objetivo é evitar recalculação de arredondamento ao chamar múltiplos métodos de saída.
     private _cachedStringValue: string | null = null;
     private _cachedCentsValue: bigint | null = null;
 
@@ -81,7 +107,7 @@ export class CurrencyNBROutput {
         latexExpression: string,
         verbalExpression: string,
         unicodeExpression: string,
-        options?: CurrencyNBROutputOptions,
+        options?: CalcAUDOutputOptions,
     ) {
         this.value = value;
         this.defaultDecimals = defaultDecimals;
@@ -92,8 +118,8 @@ export class CurrencyNBROutput {
         if (
             options?.roundingMethod && !(VALID_ROUNDING_METHODS as readonly string[]).includes(options.roundingMethod)
         ) {
-            throw new CurrencyNBRError({
-                type: "invalid-currency-format",
+            throw new CalcAUDError({
+                type: "invalid-rounding-method",
                 title: "Arredondamento Inválido",
                 detail: `O método '${options.roundingMethod}' não é suportado.`,
                 operation: "output-options",
@@ -101,8 +127,8 @@ export class CurrencyNBROutput {
         }
 
         if (options?.locale && !Object.keys(LOCALE_CURRENCY_MAP).includes(options.locale)) {
-            throw new CurrencyNBRError({
-                type: "invalid-currency-format",
+            throw new CalcAUDError({
+                type: "invalid-locale",
                 title: "Locale não Suportado",
                 detail: `O locale '${options.locale}' não está disponível.`,
                 operation: "output-options",
@@ -110,8 +136,8 @@ export class CurrencyNBROutput {
         }
 
         const resolvedLocale = options?.locale ?? DEFAULT_OPTIONS.locale;
-        const resolvedCurrency = options?.currency ??
-            (options?.locale ? LOCALE_CURRENCY_MAP[options.locale] : DEFAULT_OPTIONS.currency);
+        const resolvedCurrency = options?.currency
+            ?? (options?.locale ? LOCALE_CURRENCY_MAP[options.locale] : DEFAULT_OPTIONS.currency);
 
         this.options = {
             ...DEFAULT_OPTIONS,
@@ -123,8 +149,8 @@ export class CurrencyNBROutput {
 
     /**
      * Resolve o cache de arredondamento de forma preguiçosa.
-     * Garante que o cálculo de arredondamento e formatação para string
-     * ocorra apenas uma vez para o objeto de saída.
+     * Garante que o cálculo ocorra apenas uma vez, independente de quantos
+     * formatos de saída o usuário solicitar.
      */
     private _resolveLazyCache(): void {
         if (this._cachedStringValue !== null && this._cachedCentsValue !== null) {
@@ -142,12 +168,21 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna o valor arredondado e formatado como string decimal.
+     * Retorna o valor arredondado e formatado como string decimal simples.
+     *
+     * @returns String decimal (ex: "1234.56").
+     *
+     * @example
+     * ```ts
+     * CalcAUD.from(10.5).commit(2).toString(); // "10.50"
+     * CalcAUD.from("1/3").commit(2).toString(); // "0.33"
+     * CalcAUD.from("1000").commit(0).toString(); // "1000"
+     * ```
      */
     public toString(): string {
         const start = performance.now();
         this._resolveLazyCache();
-        const result = this._cachedStringValue!;
+        const result = this._cachedStringValue ?? "CACHE_ERROR";
         const end = performance.now();
         Logger.getChild(["output", "string"]).info("String output generated {*}", {
             calcTime: end - start,
@@ -157,13 +192,21 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna o valor como Number.
+     * Retorna o valor convertido para Number (float).
+     * CUIDADO: Ao converter para Number, você perde a garantia de precisão arbitrária do BigInt.
+     *
+     * @returns O valor como number.
+     *
+     * @example
+     * ```ts
+     * const val = CalcAUD.from(10).div(2).commit(2).toFloatNumber(); // 5
+     * ```
      */
     public toFloatNumber(): number {
         const start = performance.now();
         const result = Number(this.toString());
         const end = performance.now();
-        Logger.getChild(["output", "toFloatNumber"]).info("Float output generated {*}", {
+        Logger.getChild(["output", "float"]).info("Float output generated {*}", {
             calcTime: end - start,
             result,
         });
@@ -172,14 +215,22 @@ export class CurrencyNBROutput {
 
     /**
      * Retorna o valor como BigInt (Cents), arredondado para a escala desejada.
-     * Ex: "15.00" (interno 15000000000000n) retorna 1500n para 2 casas decimais.
+     * Útil para persistência em bancos de dados que armazenam centavos.
+     *
+     * @returns BigInt na escala reduzida.
+     *
+     * @example
+     * ```ts
+     * // 15.00 com 2 casas decimais -> retorna 1500n
+     * CalcAUD.from("15.00").commit(2).toCentsInBigInt();
+     * ```
      */
     public toCentsInBigInt(): bigint {
         const start = performance.now();
         this._resolveLazyCache();
-        const result = this._cachedCentsValue!;
+        const result = this._cachedCentsValue ?? 0n;
         const end = performance.now();
-        Logger.getChild(["output", "toCentsInBigInt"]).info("Cents BigInt output generated {*}", {
+        Logger.getChild(["output", "cents"]).info("Cents BigInt output generated {*}", {
             calcTime: end - start,
             result: result.toString(),
         });
@@ -188,12 +239,15 @@ export class CurrencyNBROutput {
 
     /**
      * Retorna o valor bruto BigInt usado internamente (escala fixa de 10^12).
+     * Para auditoria técnica profunda e debug.
+     *
+     * @returns BigInt bruto.
      */
     public toRawInternalBigInt(): bigint {
         const start = performance.now();
         const result = this.value;
         const end = performance.now();
-        Logger.getChild(["output", "toRawInternalBigInt"]).info("Raw Internal BigInt output generated {*}", {
+        Logger.getChild(["output", "raw"]).info("Raw Internal BigInt output generated {*}", {
             calcTime: end - start,
             result: result.toString(),
         });
@@ -201,7 +255,16 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna o resultado formatado como moeda.
+     * Retorna o resultado formatado como moeda (ex: R$ 1.234,56).
+     * Respeita o 'locale' e a 'currency' definidos nas opções.
+     *
+     * @returns String monetária formatada.
+     *
+     * @example
+     * ```ts
+     * CalcAUD.from(1250.5).commit(2).toMonetary(); // "R$ 1.250,50"
+     * CalcAUD.from(10).commit(2, { locale: "en-US" }).toMonetary(); // "$10.00"
+     * ```
      */
     public toMonetary(): string {
         const start = performance.now();
@@ -209,7 +272,7 @@ export class CurrencyNBROutput {
         const targetCurrency = this.options.currency;
         const result = formatMonetary(this.toString(), targetLocale, targetCurrency);
         const end = performance.now();
-        Logger.getChild(["output", "toMonetary"]).info("Monetary output generated {*}", {
+        Logger.getChild(["output", "monetary"]).info("Monetary output generated {*}", {
             calcTime: end - start,
             result,
             locale: targetLocale,
@@ -219,7 +282,10 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna a expressão e o resultado em LaTeX.
+     * Retorna a expressão completa e o resultado em formato LaTeX.
+     * Ideal para visualização em dashboards financeiros e relatórios científicos.
+     *
+     * @returns String LaTeX.
      */
     public toLaTeX(): string {
         const start = performance.now();
@@ -231,7 +297,7 @@ export class CurrencyNBROutput {
         const roundExpr = `\\text{round}_{${abbrev}}(${unrounded}, ${decimals})`;
         const result = `$$ ${this.latexExpression} = ${roundExpr} = ${rounded} $$`;
         const end = performance.now();
-        Logger.getChild(["output", "toLaTeX"]).info("LaTeX output generated {*}", {
+        Logger.getChild(["output", "latex"]).info("LaTeX output generated {*}", {
             calcTime: end - start,
             result,
         });
@@ -239,7 +305,10 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna o HTML renderizado para a fórmula.
+     * Retorna o HTML renderizado (via KaTeX) contendo a fórmula matemática.
+     * Inclui suporte nativo para acessibilidade via 'aria-label' verbalizado.
+     *
+     * @returns String HTML com CSS inline.
      */
     public toHTML(): string {
         const start = performance.now();
@@ -257,14 +326,17 @@ export class CurrencyNBROutput {
             this.toVerbalA11y(),
         );
         const end = performance.now();
-        Logger.getChild(["output", "toHTML"]).info("HTML output generated {*}", {
+        Logger.getChild(["output", "html"]).info("HTML output generated {*}", {
             calcTime: end - start,
         });
         return result;
     }
 
     /**
-     * Retorna a descrição verbal acessível.
+     * Retorna a descrição verbal acessível para o cálculo.
+     * Útil para leitores de tela e auditorias faladas.
+     *
+     * @returns Descrição textual por extenso.
      */
     public toVerbalA11y(): string {
         const start = performance.now();
@@ -275,7 +347,7 @@ export class CurrencyNBROutput {
             this.options.roundingMethod,
         );
         const end = performance.now();
-        Logger.getChild(["output", "toVerbalA11y"]).info("Verbal output generated {*}", {
+        Logger.getChild(["output", "verbal"]).info("Verbal output generated {*}", {
             calcTime: end - start,
             locale: this.options.locale,
         });
@@ -283,7 +355,10 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna a expressão em Unicode.
+     * Retorna a expressão matemática e o resultado utilizando caracteres Unicode (UTF-8).
+     * Ótimo para logs de terminal, e-mails simples ou mensagens de texto.
+     *
+     * @returns Representação textual Unicode.
      */
     public toUnicode(): string {
         const start = performance.now();
@@ -296,7 +371,7 @@ export class CurrencyNBROutput {
         const roundExpr = `round${subAbbrev}(${unrounded}, ${decimals})`;
         const result = `${this.unicodeExpression} = ${roundExpr} = ${rounded}`;
         const end = performance.now();
-        Logger.getChild(["output", "toUnicode"]).info("Unicode output generated {*}", {
+        Logger.getChild(["output", "unicode"]).info("Unicode output generated {*}", {
             calcTime: end - start,
             result,
         });
@@ -304,7 +379,9 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna um buffer de imagem contendo a renderização.
+     * Gera uma imagem (buffer SVG) contendo a representação visual do cálculo.
+     *
+     * @returns Uint8Array contendo os bytes da imagem SVG.
      */
     public toImageBuffer(): Uint8Array {
         const start = performance.now();
@@ -322,16 +399,19 @@ export class CurrencyNBROutput {
             this.toVerbalA11y(),
         );
         const end = performance.now();
-        Logger.getChild(["output", "toImageBuffer"]).info("ImageBuffer output generated {*}", {
+        Logger.getChild(["output", "image"]).info("ImageBuffer output generated {*}", {
             calcTime: end - start,
         });
         return result;
     }
 
     /**
-     * Retorna um objeto JSON contendo os resultados solicitados.
+     * Retorna um objeto JSON contendo os resultados e metadados do cálculo.
+     *
+     * @param elements Lista de métodos de saída para incluir no JSON (opcional).
+     * @returns String JSON serializada.
      */
-    public toJson(elements: CurrencyOutputMethod[] = []): string {
+    public toJson(elements: CalcAUDOutputMethod[] = []): string {
         const start = performance.now();
         const targetElements = elements.length > 0 ? elements : DEFAULT_JSON_ELEMENTS;
         const resultObj: Record<string, unknown> = {
@@ -380,7 +460,7 @@ export class CurrencyNBROutput {
 
         const result = JSON.stringify(resultObj);
         const end = performance.now();
-        Logger.getChild(["output", "toJson"]).info("JSON output generated {*}", {
+        Logger.getChild(["output", "json"]).info("JSON output generated {*}", {
             calcTime: end - start,
             elements: targetElements,
         });
@@ -388,15 +468,15 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Ponto de saída agnóstico que permite total controle sobre os dados e métodos internos.
-     * Ideal para implementações de protocolos (Protobuf), integrações externas ou
-     * exportações complexas.
+     * Ponto de saída agnóstico que permite total controle sobre o processamento dos dados.
+     * Ideal para implementações de protocolos binários (Protobuf), integrações externas
+     * ou exportações para formatos não suportados nativamente.
      *
      * @param processor Função ou interface que processa a saída.
      * @returns O resultado no formato definido pelo desenvolvedor.
      */
     public toCustomOutput<Toutput>(
-        processor: ICurrencyNBRCustomOutput<Toutput>,
+        processor: ICalcAUDCustomOutput<Toutput>,
     ): Toutput {
         const start = performance.now();
 
@@ -413,7 +493,7 @@ export class CurrencyNBROutput {
         });
 
         const end = performance.now();
-        Logger.getChild(["output", "toCustomOutput"]).info("Custom output generated {*}", {
+        Logger.getChild(["output", "custom"]).info("Custom output generated {*}", {
             calcTime: end - start,
         });
 

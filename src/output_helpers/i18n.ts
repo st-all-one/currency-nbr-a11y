@@ -1,7 +1,17 @@
+/**
+ * @module I18n
+ * Dicionários de tradução e tokens para localização de expressões matemáticas.
+ *
+ * Este módulo provê a infraestrutura necessária para transformar operações
+ * abstratas em linguagem natural em diversos idiomas, facilitando a
+ * acessibilidade e a auditoria em diferentes regiões.
+ */
+
 import type { LocaleLang } from "./options.ts";
 
 /**
- * Tokens internos usados para representar operações matemáticas de forma agnóstica à linguagem.
+ * Tokens internos protegidos utilizados para representar operações matemáticas
+ * de forma agnóstica à linguagem durante o fluxo de cálculo.
  */
 export const VERBAL_TOKENS = {
     ADD: "{#ADD#}",
@@ -11,7 +21,7 @@ export const VERBAL_TOKENS = {
     DIV_INT: "{#DIV_INT#}",
     MOD: "{#MOD#}",
 
-    // Novas expressões auditáveis para divInt e mod
+    // Novas expressões auditáveis para divInt e mod que detalham a estratégia utilizada
     DIV_INT_E_MID: "{#DIE_M#}",
     DIV_INT_E_SUF: "{#DIE_S#}",
     DIV_INT_T_MID: "{#DIT_M#}",
@@ -24,24 +34,24 @@ export const VERBAL_TOKENS = {
     MOD_T_SUF: "{#MT_S#}",
 
     // Potenciação e Raízes
-    POW: "{#POW#}", // "elevado a"
-    ROOT_IDX: "{#ROOT_IDX#}", // "raiz de índice"
-    ROOT_OF: "{#ROOT_OF#}", // "de" (após o índice)
+    POW: "{#POW#}",
+    ROOT_IDX: "{#ROOT_IDX#}",
+    ROOT_OF: "{#ROOT_OF#}",
 
-    // Agrupamento
+    // Agrupamento léxico
     GRP_START: "{#GRP_S#}",
     GRP_END: "{#GRP_E#}",
 
-    // Conectores finais
-    EQ: "{#EQ#}", // "é igual a"
-    COMMA: "{#COMMA#}", // Separador decimal verbal
-    ROUNDING: "{#ROUNDING#}", // Prefixo para indicar o método de arredondamento
+    // Conectores de fechamento e formatação
+    EQ: "{#EQ#}",
+    COMMA: "{#COMMA#}",
+    ROUNDING: "{#ROUNDING#}",
 } as const;
 
 type TranslationSchema = Record<keyof typeof VERBAL_TOKENS, string>;
 
 /**
- * Mapa de traduções para todos os locales suportados.
+ * Mapa exaustivo de traduções para todos os locales suportados pela biblioteca CalcAUD.
  */
 export const VERBAL_TRANSLATIONS: Record<LocaleLang, TranslationSchema> = {
     "pt-BR": {
@@ -151,7 +161,7 @@ export const VERBAL_TRANSLATIONS: Record<LocaleLang, TranslationSchema> = {
     "fr-FR": {
         ADD: " plus ",
         SUB: " moins ",
-        MULT: " multiplié par ",
+        MULT: " multiplié por ",
         DIV: " divisé par ",
         DIV_INT: " divisé entièrement par ",
         MOD: " modulo ",
@@ -169,7 +179,7 @@ export const VERBAL_TRANSLATIONS: Record<LocaleLang, TranslationSchema> = {
         ROOT_IDX: "racine d'indice ",
         ROOT_OF: " de ",
         GRP_START: "groupé, ",
-        GRP_END: ", fin du groupe",
+        GRP_END: ", fin du grupo",
         EQ: " est égal à ",
         COMMA: " virgule ",
         ROUNDING: " (Arrondi: ",
@@ -205,17 +215,17 @@ export const VERBAL_TRANSLATIONS: Record<LocaleLang, TranslationSchema> = {
         SUB: " минус ",
         MULT: " умножить на ",
         DIV: " разделить на ",
-        DIV_INT: " деление нацело на ",
+        DIV_INT: " деление naцело на ",
         MOD: " остаток от деления на ",
         DIV_INT_E_MID: " разделить на ",
         DIV_INT_E_SUF: ", с округлением вниз",
         DIV_INT_T_MID: " разделить на ",
         DIV_INT_T_SUF: ", с усечением",
         MOD_E_PRE: "евклидов остаток от деления ",
-        MOD_E_MID: " на ",
+        MOD_E_MID: " na ",
         MOD_E_SUF: "",
         MOD_T_PRE: "остаток от деления ",
-        MOD_T_MID: " на ",
+        MOD_T_MID: " na ",
         MOD_T_SUF: "",
         POW: " в степени ",
         ROOT_IDX: "корень степени ",
@@ -234,7 +244,7 @@ export const VERBAL_TRANSLATIONS: Record<LocaleLang, TranslationSchema> = {
         DIV_INT: " 整数の除算 ",
         MOD: " 剰余 ",
         DIV_INT_E_MID: " を ",
-        DIV_INT_E_SUF: " で割り、床関数を適用",
+        DIV_INT_E_SUF: " で割り、床関数 te適用",
         DIV_INT_T_MID: " を ",
         DIV_INT_T_SUF: " で割り、切り捨て",
         MOD_E_PRE: "",

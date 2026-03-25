@@ -1,8 +1,8 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { configure, type LogRecord, type Sink } from "@logtape";
-import { CurrencyNBR } from "../mod.ts";
-import { CurrencyNBRError } from "../src/errors.ts";
+import { CalcAUD } from "../mod.ts";
+import { CalcAUDError } from "../src/errors.ts";
 
 describe("Compliance e Telemetria (Integration)", () => {
     const records: LogRecord[] = [];
@@ -15,16 +15,20 @@ describe("Compliance e Telemetria (Integration)", () => {
         sinks: { test: testSink },
         filters: {},
         loggers: [
-            { category: ["currency-nbr-a11y"], sinks: ["test"], lowestLevel: "debug" },
+            {
+                category: ["currency-nbr-a11y"],
+                sinks: ["test"],
+                lowestLevel: "debug",
+            },
         ],
     });
 
     describe("RFC 7807 Compliance", () => {
         it("deve validar se todos os erros lançados possuem campos obrigatórios RFC 7807", () => {
             try {
-                CurrencyNBR.from("INVALID");
+                CalcAUD.from("INVALID");
             } catch (e) {
-                if (e instanceof CurrencyNBRError) {
+                if (e instanceof CalcAUDError) {
                     expect(e.type).toContain("errors/invalid-numeric-format");
                     expect(e.title).toBeDefined();
                     expect(e.status).toBeGreaterThanOrEqual(400);
@@ -35,16 +39,16 @@ describe("Compliance e Telemetria (Integration)", () => {
                     expect(json.type).toBe(e.type);
                     expect(json.instance).toBe(e.instance);
                 } else {
-                    throw new Error("Deveria ser CurrencyNBRError");
+                    throw new Error("Deveria ser CalcAUDError");
                 }
             }
         });
 
         it("Math Audit Proof: deve validar injeção de LaTeX parcial no erro de divisão por zero", () => {
             try {
-                CurrencyNBR.from(100).div(0);
+                CalcAUD.from(100).div(0);
             } catch (e) {
-                if (e instanceof CurrencyNBRError) {
+                if (e instanceof CalcAUDError) {
                     expect(e.math_audit?.latex).toBe("\\frac{100}{0}");
                     expect(e.math_audit?.unicode).toBe("100 ÷ 0");
                     expect(e.math_audit?.operation).toBe("division");
@@ -56,7 +60,7 @@ describe("Compliance e Telemetria (Integration)", () => {
     describe("Logtape Telemetry", () => {
         it("deve disparar logs de nível DEBUG com metadados estruturados para operações", () => {
             records.length = 0;
-            CurrencyNBR.from(100).add(50).commit();
+            CalcAUD.from(100).add(50).commit();
 
             const inputLog = records.find((r) => r.category.join(".") === "currency-nbr-a11y.input");
             const engineLog = records.find((r) => r.category.join(".") === "currency-nbr-a11y.engine.add");
@@ -77,7 +81,7 @@ describe("Compliance e Telemetria (Integration)", () => {
             records.length = 0;
             const pii = "CONFIDENTIAL_PII_12345";
             try {
-                CurrencyNBR.from(pii);
+                CalcAUD.from(pii);
             } catch {
                 // erro ignorado
             }
@@ -92,9 +96,9 @@ describe("Compliance e Telemetria (Integration)", () => {
         it("deve garantir que PII não vaze para o LaTeX/Unicode em caso de erro", () => {
             const pii = "PII_IN_NON_NUMERIC";
             try {
-                CurrencyNBR.from(pii);
+                CalcAUD.from(pii);
             } catch (e) {
-                if (e instanceof CurrencyNBRError) {
+                if (e instanceof CalcAUDError) {
                     const auditString = JSON.stringify(e.math_audit);
                     expect(auditString).not.toContain(pii);
                     expect(e.detail).not.toContain(pii);

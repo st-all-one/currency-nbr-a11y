@@ -1,9 +1,9 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBR } from "../mod.ts";
+import { CalcAUD } from "../mod.ts";
 
 describe("Outputs Exaustivos (Unit)", () => {
-    const calc = CurrencyNBR.from(100.50).add(50.25);
+    const calc = CalcAUD.from(100.50).add(50.25);
     const output = calc.commit(2);
 
     describe("toString", () => {
@@ -12,7 +12,7 @@ describe("Outputs Exaustivos (Unit)", () => {
         });
 
         it("deve respeitar arredondamentos diferentes no output", () => {
-            const out = CurrencyNBR.from("10.555").commit(2, { roundingMethod: "TRUNCATE" });
+            const out = CalcAUD.from("10.555").commit(2, { roundingMethod: "TRUNCATE" });
             expect(out.toString()).toBe("10.55");
         });
     });

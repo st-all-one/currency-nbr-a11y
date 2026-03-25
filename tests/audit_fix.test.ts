@@ -1,14 +1,14 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBR } from "../mod.ts";
+import { CalcAUD } from "../mod.ts";
 
-describe("CurrencyNBR - Audit Bug Fixes", () => {
+describe("CalcAUD - Audit Bug Fixes", () => {
     describe("Complex nested operations", () => {
         it("deve auditar corretamente 10 + (5 - 2)", () => {
             // 10 + (5 - 2)
-            const calc1 = CurrencyNBR.from("10")
+            const calc1 = CalcAUD.from("10")
                 .add(
-                    CurrencyNBR.from(5).sub(2),
+                    CalcAUD.from(5).sub(2),
                 )
                 .commit(2);
 
@@ -22,9 +22,9 @@ describe("CurrencyNBR - Audit Bug Fixes", () => {
 
         it("deve auditar corretamente 10 - (5 + 2)", () => {
             // 10 - (5 + 2)
-            const calc2 = CurrencyNBR.from("10")
+            const calc2 = CalcAUD.from("10")
                 .sub(
-                    CurrencyNBR.from(5).add(2),
+                    CalcAUD.from(5).add(2),
                 )
                 .commit(2);
 
@@ -37,9 +37,9 @@ describe("CurrencyNBR - Audit Bug Fixes", () => {
 
         it("deve auditar corretamente (10 + 5) * (2 + 1)", () => {
             // (10 + 5) * (2 + 1)
-            const calc3 = CurrencyNBR.from(10).add(5).group()
+            const calc3 = CalcAUD.from(10).add(5).group()
                 .mult(
-                    CurrencyNBR.from(2).add(1).group(),
+                    CalcAUD.from(2).add(1).group(),
                 )
                 .commit(2);
 
@@ -51,7 +51,7 @@ describe("CurrencyNBR - Audit Bug Fixes", () => {
     describe("Negative values", () => {
         it("deve lidar com 10 + (-5) corretamente no Unicode", () => {
             // 10 + (-5)
-            const calc1 = CurrencyNBR.from(10).add(CurrencyNBR.from(-5)).commit(2);
+            const calc1 = CalcAUD.from(10).add(CalcAUD.from(-5)).commit(2);
             const json1 = JSON.parse(calc1.toJson(["toUnicode"])) as any;
             // Atualmente resulta em "10 -5" devido ao space injection no getFullUnicodeExpression
             // Mas o valor matemático está correto.

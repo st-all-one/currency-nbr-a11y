@@ -1,9 +1,18 @@
 /**
+ * @module Superscript
+ * Utilitário para conversão de caracteres numéricos em seus equivalentes
+ * sobrescritos Unicode. Essencial para a representação legível de potências
+ * em expressões Unicode auditáveis.
+ */
+
+/**
  * Converte caracteres normais para seus equivalentes sobrescritos em Unicode.
+ *
  * @param s A string original.
  * @returns A string convertida para sobrescrito.
  */
 export function toSuperscript(s: string): string {
+    // Mapeamento direto para evitar recursão ou manipulação complexa de strings
     const map: Record<string, string> = {
         "0": "⁰",
         "1": "¹",

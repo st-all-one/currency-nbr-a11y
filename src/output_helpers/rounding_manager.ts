@@ -8,13 +8,23 @@ import {
 } from "./rounding_strategies.ts";
 
 /**
- * Aplica o método de arredondamento selecionado.
+ * @module RoundingManager
+ * Orquestrador central para operações de arredondamento.
+ *
+ * Esta camada atua como uma fachada (Facade) para as diferentes estratégias
+ * de arredondamento implementadas na biblioteca, garantindo que o valor
+ * correto seja despachado para o algoritmo correspondente.
+ */
+
+/**
+ * Aplica o método de arredondamento selecionado, convertendo o valor da escala
+ * interna de alta precisão para a escala de exibição desejada.
  *
  * @param value Valor BigInt na escala interna (geralmente 10^12).
  * @param method Estratégia de arredondamento (NBR-5891, HALF-EVEN, etc).
- * @param currentScale Escala atual do BigInt (ex: 12).
+ * @param currentScale Escala decimal atual do BigInt (ex: 12).
  * @param targetDecimals Casas decimais desejadas no output (ex: 2).
- * @returns O valor BigInt ajustado para a nova escala (targetDecimals).
+ * @returns O valor BigInt ajustado e arredondado para a nova escala (targetDecimals).
  */
 export function applyRounding(
     value: bigint,
@@ -22,6 +32,8 @@ export function applyRounding(
     currentScale: number,
     targetDecimals: number,
 ): bigint {
+    // Despachamos a operação para a implementação técnica específica.
+    // Cada estratégia lida com casos de borda (como 0.5 exato) de forma distinta.
     switch (method) {
         case "HALF-EVEN":
             return roundHalfEven(value, currentScale, targetDecimals);

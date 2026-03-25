@@ -1,7 +1,7 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBR } from "../src/main.ts";
-import { CurrencyNBRError } from "../src/errors.ts";
+import { CalcAUD } from "../src/main.ts";
+import { CalcAUDError } from "../src/errors.ts";
 
 describe("Strict Parsing Rules", () => {
     describe("Allowed Inputs", () => {
@@ -46,7 +46,7 @@ describe("Strict Parsing Rules", () => {
 
         for (const { input, desc } of allowedCases) {
             it(`should allow ${desc}: ${String(input)}`, () => {
-                expect(() => CurrencyNBR.from(input as any)).not.toThrow();
+                expect(() => CalcAUD.from(input as any)).not.toThrow();
             });
         }
     });
@@ -85,15 +85,15 @@ describe("Strict Parsing Rules", () => {
         for (const { input, desc } of forbiddenCases) {
             it(`should REJECT ${desc}: "${input}"`, () => {
                 try {
-                    CurrencyNBR.from(input as any);
+                    CalcAUD.from(input as any);
                     throw new Error(`Should have rejected: ${input}`);
                 } catch (e) {
-                    expect(e).toBeInstanceOf(CurrencyNBRError);
+                    expect(e).toBeInstanceOf(CalcAUDError);
                     if (input === "1/0") {
                         // Expect division by zero specific error or generic format error?
                         // Current plan puts parsing in parseStringValue.
                         // Fraction parsing likely throws if denominator is 0.
-                        // Let's accept any CurrencyNBRError for now.
+                        // Let's accept any CalcAUDError for now.
                     }
                 }
             });

@@ -4,22 +4,54 @@ import { calculateBigIntPower, calculateFractionalPower } from "./internal/math_
 import { parseStringValue } from "./internal/parser.ts";
 import { toSuperscript } from "./internal/superscript.ts";
 import { wrapLaTeX, wrapUnicode } from "./internal/wrappers.ts";
-import { CurrencyNBROutput } from "./output.ts";
+import { CalcAUDOutput } from "./output.ts";
 import { DEFAULT_DISPLAY_PRECISION, INTERNAL_SCALE_FACTOR } from "./constants.ts";
-import type { CurrencyNBROutputOptions } from "./output_helpers/options.ts";
+import type { CalcAUDOutputOptions } from "./output_helpers/options.ts";
 import { VERBAL_TOKENS } from "./output_helpers/i18n.ts";
-import { CurrencyNBRError, logFatal } from "./errors.ts";
-import { getLogger } from "@logtape";
+import { CalcAUDError, logFatal } from "./errors.ts";
+import { Logger } from "./logger.ts";
 
 /**
- * Representa qualquer valor que possa ser convertido em um montante auditável.
+ * Representa qualquer valor numérico ou instância de CalcAUD que possa ser
+ * processado pela biblioteca.
+ *
+ * Suporta strings (decimais, frações, científicos), numbers (finitos) e BigInts.
  */
-export type CurrencyNBRAllowedValue = string | number | bigint | CurrencyNBR;
+export type CalcAUDAllowedValue = string | number | bigint | CalcAUD;
 
 /**
- * Classe principal para cálculos financeiros precisos, auditáveis e acessíveis.
+ * Classe principal da biblioteca CalcAUD.
+ *
+ * CalcAUD é um motor de cálculo imutável projetado para operações financeiras
+ * de alta precisão (12 casas decimais internas) com auditoria nativa.
+ * Cada operação realizada gera um rastro de auditoria em LaTeX, Unicode e Verbal,
+ * permitindo total transparência e acessibilidade (A11y).
+ *
+ * @example
+ * ```ts
+ * // Exemplo Básico: Soma Simples
+ * const total = CalcAUD.from(10).add(5).commit(2);
+ * console.log(total.toMonetary()); // "R$ 15,00"
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Exemplo Intermediário: Cálculo de Imposto com Agrupamento
+ * const base = CalcAUD.from("1250.50");
+ * const imposto = base.mult("0.15").group().add(50).commit(2);
+ * console.log(imposto.toLaTeX()); // "$$ (1250.50 \times 0.15) + 50 = ... $$"
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Exemplo Avançado: Juros Compostos (Potenciação Fracionária)
+ * // Taxa de 10% ao ano para 6 meses: (1 + 0.10)^(6/12)
+ * const taxaAnual = CalcAUD.from(1).add("0.10");
+ * const taxaSemestral = taxaAnual.pow("6/12").sub(1).commit(4);
+ * console.log(taxaSemestral.toVerbalA11y()); // "... elevado a 6/12 ..."
+ * ```
  */
-export class CurrencyNBR {
+export class CalcAUD {
     private readonly accumulatedValue: bigint;
     private readonly activeTermValue: bigint;
     private readonly accumulatedExpression: string;
@@ -49,12 +81,27 @@ export class CurrencyNBR {
         this.activeTermUnicode = activeTermUnicode;
     }
 
-    public static from(value: CurrencyNBRAllowedValue): CurrencyNBR {
+    /**
+     * Cria uma nova instância de CalcAUD a partir de um valor suportado.
+     *
+     * @param value String, Number, BigInt ou outra instância de CalcAUD.
+     * @returns Uma nova instância de CalcAUD.
+     * @throws CalcAUDError se o tipo for inválido ou o número não for finito.
+     *
+     * @example
+     * ```ts
+     * CalcAUD.from(100);           // Via Number
+     * CalcAUD.from("150.50");      // Via String Decimal
+     * CalcAUD.from("1/3");         // Via String Fração
+     * CalcAUD.from(1000n);         // Via BigInt
+     * ```
+     */
+    public static from(value: CalcAUDAllowedValue): CalcAUD {
         const start = performance.now();
-        if (value instanceof CurrencyNBR) { return value; }
+        if (value instanceof CalcAUD) { return value; }
 
         try {
-            // Validação rigorosa em runtime para tipos não suportados
+            // Validação rigorosa em runtime para garantir integridade dos cálculos
             const isValidType = value !== null
                 && value !== undefined
                 && (typeof value === "string" || typeof value === "number" || typeof value === "bigint");
@@ -62,14 +109,15 @@ export class CurrencyNBR {
             const isInvalidNumber = typeof value === "number" && !Number.isFinite(value);
 
             if (!isValidType || isInvalidNumber) {
-                throw new CurrencyNBRError({
-                    type: "invalid-currency-format",
+                throw new CalcAUDError({
+                    type: "invalid-input-format",
                     title: "Tipo de Dado Inválido",
-                    detail: `O tipo '${typeof value}' não é um formato de moeda suportado para inicialização.`,
+                    detail: `O tipo '${typeof value}' não é um formato suportado para inicialização.`,
                     operation: "from",
                 });
             }
 
+            // Convertemos tudo para a escala interna de 10^12 para evitar erros de float
             const rawValue = typeof value === "bigint"
                 ? value * INTERNAL_SCALE_FACTOR
                 : parseStringValue(value.toString());
@@ -77,7 +125,7 @@ export class CurrencyNBR {
             const initialVerbal = initialExpression;
             const initialUnicode = initialExpression;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 0n,
                 rawValue,
                 "",
@@ -89,7 +137,7 @@ export class CurrencyNBR {
             );
 
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "input"]).debug("Input initialized {*}", {
+            Logger.getChild(["input", "from"]).debug("Input initialized {*}", {
                 calcTime: end - start,
                 value: String(value),
                 type: typeof value,
@@ -98,27 +146,46 @@ export class CurrencyNBR {
 
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "from", value: String(value) });
             }
             throw e;
         }
     }
 
-    public add(value: CurrencyNBRAllowedValue): CurrencyNBR {
+    /**
+     * Adiciona um valor ao montante atual.
+     *
+     * @param value Valor a ser somado.
+     * @returns Nova instância com o resultado da soma.
+     *
+     * @example
+     * ```ts
+     * // Básico
+     * CalcAUD.from(10).add(5); // 15
+     *
+     * // Com decimais
+     * CalcAUD.from("10.50").add("0.25"); // 10.75
+     *
+     * // Encadeado
+     * CalcAUD.from(10).add(5).add(2); // 17
+     * ```
+     */
+    public add(value: CalcAUDAllowedValue): CalcAUD {
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             const newAccumulatedValue = this.accumulatedValue + this.activeTermValue;
 
+            // Mantemos a imutabilidade criando novos registros léxicos para o total
             const nextActiveExpr = wrapLaTeX(other.getFullLaTeXExpression());
             const nextActiveUnicode = wrapUnicode(other.getFullUnicodeExpression());
             const nextActiveVerbal = other.accumulatedVerbal
                 ? `${VERBAL_TOKENS.GRP_START}${other.getFullVerbalExpression()}${VERBAL_TOKENS.GRP_END}`
                 : other.activeTermVerbal;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 newAccumulatedValue,
                 otherValue,
                 this.getFullLaTeXExpression(),
@@ -129,29 +196,42 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "add"]).debug("Addition performed {*}", {
+            Logger.getChild(["engine", "add"]).debug("Addition performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
                 addingValue: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "add", value: String(value) });
             }
             throw e;
         }
     }
 
-    public sub(value: CurrencyNBRAllowedValue): CurrencyNBR {
+    /**
+     * Subtrai um valor do montante atual.
+     *
+     * @param value Valor a ser subtraído.
+     * @returns Nova instância com o resultado da subtração.
+     *
+     * @example
+     * ```ts
+     * // Básico
+     * CalcAUD.from(10).sub(3); // 7
+     *
+     * // Com valores negativos
+     * CalcAUD.from(10).sub(-5); // 15
+     *
+     * // Encadeado com expressões complexas
+     * CalcAUD.from("100").sub(CalcAUD.from(20).add(30)); // 50
+     * ```
+     */
+    public sub(value: CalcAUDAllowedValue): CalcAUD {
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             const newAccumulatedValue = this.accumulatedValue + this.activeTermValue;
 
@@ -163,7 +243,7 @@ export class CurrencyNBR {
                     : other.activeTermVerbal
             }`;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 newAccumulatedValue,
                 -otherValue,
                 this.getFullLaTeXExpression(),
@@ -174,39 +254,48 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "sub"]).debug("Subtraction performed {*}", {
+            Logger.getChild(["engine", "sub"]).debug("Subtraction performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
                 subtrahend: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "sub", value: String(value) });
             }
             throw e;
         }
     }
 
-    public mult(value: CurrencyNBRAllowedValue): CurrencyNBR {
+    /**
+     * Multiplica o montante atual por um valor.
+     *
+     * @param value Fator de multiplicação.
+     * @returns Nova instância com o resultado do produto.
+     *
+     * @example
+     * ```ts
+     * // Básico
+     * CalcAUD.from(10).mult(2); // 20
+     *
+     * // Cálculo de Porcentagem
+     * CalcAUD.from(1200).mult("0.05"); // 60
+     *
+     * // Multiplicação por fração
+     * CalcAUD.from(100).mult("1/2"); // 50
+     * ```
+     */
+    public mult(value: CalcAUDAllowedValue): CalcAUD {
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             const product = this.activeTermValue * otherValue;
 
-            // Metade da nossa escala de 10^12 (ou seja, 5 * 10^11)
+            // Arredondamento na 12ª casa interna para evitar propagação de resíduos infinitesimais
             const halfScale = INTERNAL_SCALE_FACTOR / 2n;
-
-            // Ajuste de sinal: se o produto for positivo, somamos. Se for negativo, subtraímos.
             const adjustment = product >= 0n ? halfScale : -halfScale;
-
-            // A divisão agora arredonda para a 12ª casa mais próxima em vez de simplesmente truncar
             const nextActiveValue = (product + adjustment) / INTERNAL_SCALE_FACTOR;
 
             const nextActiveExpr = `${wrapLaTeX(this.activeTermExpression)} \\times ${
@@ -217,7 +306,7 @@ export class CurrencyNBR {
                 wrapUnicode(other.getFullUnicodeExpression())
             }`;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 this.accumulatedValue,
                 nextActiveValue,
                 this.accumulatedExpression,
@@ -228,35 +317,49 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "mult"]).debug("Multiplication performed {*}", {
+            Logger.getChild(["engine", "mult"]).debug("Multiplication performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
                 multiplier: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "mult", value: String(value) });
             }
             throw e;
         }
     }
 
-    public div(value: CurrencyNBRAllowedValue): CurrencyNBR {
+    /**
+     * Divide o montante atual por um valor.
+     *
+     * @param value Divisor.
+     * @returns Nova instância com o quociente calculado.
+     * @throws CalcAUDError se o divisor for zero.
+     *
+     * @example
+     * ```ts
+     * // Básico
+     * CalcAUD.from(10).div(2); // 5
+     *
+     * // Divisão com dízima
+     * CalcAUD.from(10).div(3).commit(2); // "3.33"
+     *
+     * // Divisão de montantes complexos
+     * CalcAUD.from(100).div(CalcAUD.from(2).add(3)); // 20
+     * ```
+     */
+    public div(value: CalcAUDAllowedValue): CalcAUD {
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             if (otherValue === 0n) {
-                throw new CurrencyNBRError({
+                throw new CalcAUDError({
                     type: "division-by-zero",
                     title: "Operação Matemática Inválida",
-                    detail: "Tentativa de divisão por um montante acumulado igual a zero.",
+                    detail: "Tentativa de divisão por zero.",
                     operation: "division",
                     latex: `\\frac{${this.activeTermExpression}}{0}`,
                     unicode: `${this.activeTermUnicode} ÷ 0`,
@@ -264,10 +367,8 @@ export class CurrencyNBR {
             }
             const numerator = this.activeTermValue * INTERNAL_SCALE_FACTOR;
 
-            // Capturamos a metade exata do divisor para fazer o arredondamento na 12ª casa
+            // Arredondamento Half-Up na 12ª casa decimal interna para precisão absoluta
             const halfDenominator = otherValue / 2n;
-
-            // O ajuste do sinal garante que o arredondamento funcione para números negativos
             const adjustment = (this.activeTermValue < 0n) === (otherValue < 0n) ? halfDenominator : -halfDenominator;
 
             const nextActiveValue = (numerator + adjustment) / otherValue;
@@ -278,7 +379,7 @@ export class CurrencyNBR {
                 wrapUnicode(other.getFullUnicodeExpression())
             }`;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 this.accumulatedValue,
                 nextActiveValue,
                 this.accumulatedExpression,
@@ -289,36 +390,48 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "div"]).debug("Division performed {*}", {
+            Logger.getChild(["engine", "div"]).debug("Division performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
                 divisor: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "div", value: String(value) });
             }
             throw e;
         }
     }
 
-    public divInt(value: CurrencyNBRAllowedValue, options: CurrencyNBROutputOptions = {}): CurrencyNBR {
+    /**
+     * Realiza a divisão inteira (quociente) entre o montante atual e um valor.
+     *
+     * @param value Divisor.
+     * @param options Opções para definir a estratégia (euclidian ou truncated).
+     * @returns Nova instância com o resultado da divisão inteira.
+     *
+     * @example
+     * ```ts
+     * // Básico (Euclidiana - Padrão)
+     * CalcAUD.from(10).divInt(3); // 3
+     *
+     * // Negativos (Euclidiana vs Truncada)
+     * CalcAUD.from(-10).divInt(3); // -4 (Piso)
+     * CalcAUD.from(-10).divInt(3, { modStrategy: "truncated" }); // -3 (Truncado)
+     * ```
+     */
+    public divInt(value: CalcAUDAllowedValue, options: CalcAUDOutputOptions = {}): CalcAUD {
         const strategy = options.modStrategy ?? "euclidean";
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             if (otherValue === 0n) {
-                throw new CurrencyNBRError({
+                throw new CalcAUDError({
                     type: "division-by-zero",
                     title: "Operação Matemática Inválida",
-                    detail: "Tentativa de divisão inteira por um montante acumulado igual a zero.",
+                    detail: "Tentativa de divisão inteira por zero.",
                     operation: "divInt",
                     latex: `\\lfloor \\frac{${this.activeTermExpression}}{0} \\rfloor`,
                     unicode: `⌊${this.activeTermUnicode} ÷ 0⌋`,
@@ -331,27 +444,31 @@ export class CurrencyNBR {
             let nextActiveVerbal: string;
 
             if (strategy === "euclidean") {
-                // Euclidean (Floor Division) Logic
+                // Lógica Euclidiana: O quociente é o piso (floor) da divisão real
                 quotient = this.activeTermValue / otherValue;
                 const remainder = this.activeTermValue % otherValue;
 
                 if (remainder !== 0n && ((this.activeTermValue < 0n) !== (otherValue < 0n))) {
                     quotient -= 1n;
                 }
-                nextActiveExpr = `\\lfloor \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} \\rfloor`;
+                nextActiveExpr =
+                    `\\lfloor \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} \\rfloor`;
                 nextActiveUnicode = `⌊${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()}⌋`;
-                nextActiveVerbal = `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_E_SUF}`;
+                nextActiveVerbal =
+                    `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_E_SUF}`;
             } else {
-                // Truncated (Native) Logic
+                // Lógica Truncada: Descarta a parte fracionária (padrão C/Java/JS)
                 quotient = this.activeTermValue / otherValue;
-                nextActiveExpr = `\\operatorname{trunc}\\left(\\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}}\\right)`;
+                nextActiveExpr =
+                    `\\operatorname{trunc}\\left(\\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}}\\right)`;
                 nextActiveUnicode = `trun(${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()})`;
-                nextActiveVerbal = `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_T_SUF}`;
+                nextActiveVerbal =
+                    `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_T_SUF}`;
             }
 
             const nextActiveValue = quotient * INTERNAL_SCALE_FACTOR;
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 this.accumulatedValue,
                 nextActiveValue,
                 this.accumulatedExpression,
@@ -362,39 +479,50 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "divInt"]).debug("Integer division performed {*}", {
+            Logger.getChild(["engine", "divInt"]).debug("Integer division performed {*}", {
                 calcTime: end - start,
                 strategy,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
-                divisor: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "divInt", value: String(value), options });
             }
             throw e;
         }
     }
 
-    public mod(value: CurrencyNBRAllowedValue, options: CurrencyNBROutputOptions = {}): CurrencyNBR {
+    /**
+     * Calcula o módulo (resto da divisão) entre o montante atual e um valor.
+     *
+     * @param value Divisor.
+     * @param options Opções para definir a estratégia (euclidian ou truncated).
+     * @returns Nova instância com o resultado do módulo.
+     *
+     * @example
+     * ```ts
+     * // Básico (Euclidiana)
+     * CalcAUD.from(10).mod(3); // 1
+     *
+     * // Diferença de Estratégia com Negativos
+     * CalcAUD.from(-10).mod(3); // 2 (Euclidiano: resto sempre positivo)
+     * CalcAUD.from(-10).mod(3, { modStrategy: "truncated" }); // -1 (Truncado: segue o sinal do dividendo)
+     * ```
+     */
+    public mod(value: CalcAUDAllowedValue, options: CalcAUDOutputOptions = {}): CalcAUD {
         const strategy = options.modStrategy ?? "euclidean";
         const start = performance.now();
         try {
-            const other = CurrencyNBR.from(value);
+            const other = CalcAUD.from(value);
             const otherValue = other.accumulatedValue + other.activeTermValue;
             if (otherValue === 0n) {
-                throw new CurrencyNBRError({
+                throw new CalcAUDError({
                     type: "division-by-zero",
                     title: "Operação Matemática Inválida",
                     detail: "Tentativa de cálculo de módulo por zero.",
                     operation: "mod",
-                    latex: `${this.activeTermExpression} \\pmod{0}`,
+                    latex: `${this.activeTermExpression} \\bmod 0`,
                     unicode: `${this.activeTermUnicode} mod 0`,
                 });
             }
@@ -405,25 +533,26 @@ export class CurrencyNBR {
             let nextActiveVerbal: string;
 
             if (strategy === "euclidean") {
-                // Módulo Euclidiano: garante que o resto seja sempre positivo
-                // Fórmula: ((a % n) + n) % n
+                // Módulo Euclidiano garante que o resto seja sempre positivo: ((a % n) + n) % n
                 const rawMod = this.activeTermValue % otherValue;
                 const absDivisor = otherValue < 0n ? -otherValue : otherValue;
                 nextActiveValue = ((rawMod % absDivisor) + absDivisor) % absDivisor;
 
                 nextActiveExpr = `${this.activeTermExpression} \\bmod ${other.getFullLaTeXExpression()}`;
                 nextActiveUnicode = `${this.activeTermUnicode} mod ${other.getFullUnicodeExpression()}`;
-                nextActiveVerbal = `${VERBAL_TOKENS.MOD_E_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_E_SUF}`;
+                nextActiveVerbal =
+                    `${VERBAL_TOKENS.MOD_E_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_E_SUF}`;
             } else {
-                // Resto Truncado (Padrão JS/C#/Java)
+                // Resto Truncado segue a implementação nativa da maioria das linguagens
                 nextActiveValue = this.activeTermValue % otherValue;
 
                 nextActiveExpr = `${this.activeTermExpression} \\text{ rem } ${other.getFullLaTeXExpression()}`;
                 nextActiveUnicode = `${this.activeTermUnicode} % ${other.getFullUnicodeExpression()}`;
-                nextActiveVerbal = `${VERBAL_TOKENS.MOD_T_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_T_SUF}`;
+                nextActiveVerbal =
+                    `${VERBAL_TOKENS.MOD_T_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_T_SUF}`;
             }
 
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 this.accumulatedValue,
                 nextActiveValue,
                 this.accumulatedExpression,
@@ -434,27 +563,39 @@ export class CurrencyNBR {
                 nextActiveUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "mod"]).debug("Modulo performed {*}", {
+            Logger.getChild(["engine", "mod"]).debug("Modulo performed {*}", {
                 calcTime: end - start,
                 strategy,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 currentAccumulatedResult: (result.accumulatedValue + result.activeTermValue).toString(),
-                activeTerm: result.activeTermValue.toString(),
-                divisor: otherValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "mod", value: String(value), options });
             }
             throw e;
         }
     }
 
-    public pow(exponent: string | number): CurrencyNBR {
+    /**
+     * Eleva o montante atual a uma potência ou calcula uma raiz.
+     *
+     * @param exponent O expoente. Pode ser inteiro (ex: 2), decimal (ex: 0.5) ou fração (ex: "1/2").
+     * @returns Nova instância com o resultado da operação.
+     *
+     * @example
+     * ```ts
+     * // Potenciação Inteira
+     * CalcAUD.from(2).pow(3); // 8
+     *
+     * // Raiz Quadrada via Decimal
+     * CalcAUD.from(9).pow(0.5); // 3
+     *
+     * // Raiz Cúbica via Fração
+     * CalcAUD.from(27).pow("1/3"); // 3
+     * ```
+     */
+    public pow(exponent: string | number): CalcAUD {
         const start = performance.now();
         try {
             const baseValue = this.activeTermValue;
@@ -469,31 +610,28 @@ export class CurrencyNBR {
 
             const expStr = exponent.toString();
             if (expStr.includes("/")) {
+                // Lógica para potências fracionárias (raízes n-ésimas)
                 const parts = expStr.split("/");
 
-                // 1. Validação rigorosa do formato fracionário (Prevenindo o "1 / 2 / 3")
                 if (parts.length !== 2) {
-                    throw new CurrencyNBRError({
+                    throw new CalcAUDError({
                         type: "invalid-fractional-exponent",
                         title: "Expoente Fracionário Inválido",
-                        detail:
-                            `O expoente '${expStr}' é inválido. Um expoente fracionário deve conter exatamente um numerador e um denominador separados por uma única barra (ex: '1/2').`,
+                        detail: `O expoente '${expStr}' deve conter apenas um numerador e um denominador.`,
                         operation: "pow",
                     });
                 }
 
-                // 2. Só agora tentamos converter para BigInt
-                // Usamos try/catch aqui caso o usuário mande algo como "1 / abc"
                 let num: bigint;
                 let den: bigint;
                 try {
                     num = BigInt(parts[0].trim());
                     den = BigInt(parts[1].trim());
                 } catch {
-                    throw new CurrencyNBRError({
+                    throw new CalcAUDError({
                         type: "invalid-exponent-value",
                         title: "Valor de Expoente Inválido",
-                        detail: `Não foi possível converter as partes do expoente '${expStr}' para números inteiros.`,
+                        detail: "Não foi possível converter as partes do expoente para inteiros.",
                         operation: "pow",
                     });
                 }
@@ -508,6 +646,7 @@ export class CurrencyNBR {
                 }`;
                 nextUnicode = `${denSup === "²" ? "" : denSup}√(${baseUnicode}${numSup})`;
             } else {
+                // Lógica para potências inteiras ou decimais simples
                 const exp = BigInt(expStr);
                 const expSup = toSuperscript(expStr);
 
@@ -525,7 +664,7 @@ export class CurrencyNBR {
                     nextValue = (INTERNAL_SCALE_FACTOR * INTERNAL_SCALE_FACTOR) / denVal;
                 }
             }
-            const result = new CurrencyNBR(
+            const result = new CalcAUD(
                 this.accumulatedValue,
                 nextValue,
                 this.accumulatedExpression,
@@ -536,45 +675,50 @@ export class CurrencyNBR {
                 nextUnicode,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "pow"]).debug("Power/Root operation performed {*}", {
+            Logger.getChild(["engine", "pow"]).debug("Power/Root operation performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 exponent: expStr,
-                base: baseValue.toString(),
                 result: result.activeTermValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "pow", exponent });
             }
             throw e;
         }
     }
 
-    public group(): CurrencyNBR {
+    /**
+     * Agrupa a expressão atual em parênteses para definir precedência léxica.
+     *
+     * @returns Nova instância com a expressão agrupada.
+     *
+     * @example
+     * ```ts
+     * // Sem agrupamento (auditoria linear)
+     * CalcAUD.from(10).add(5).mult(2); // "10 + 5 * 2" (em LaTeX)
+     *
+     * // Com agrupamento (auditoria protegida)
+     * CalcAUD.from(10).add(5).group().mult(2); // "(10 + 5) * 2"
+     * ```
+     */
+    public group(): CalcAUD {
         const start = performance.now();
         try {
             const totalValue = this.accumulatedValue + this.activeTermValue;
             const groupedExpr = `\\left( ${this.getFullLaTeXExpression()} \\right)`;
             const groupedVerbal = `${VERBAL_TOKENS.GRP_START}${this.getFullVerbalExpression()}${VERBAL_TOKENS.GRP_END}`;
             const groupedUnicode = `(${this.getFullUnicodeExpression()})`;
-            const result = new CurrencyNBR(0n, totalValue, "", groupedExpr, "", groupedVerbal, "", groupedUnicode);
+            const result = new CalcAUD(0n, totalValue, "", groupedExpr, "", groupedVerbal, "", groupedUnicode);
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "group"]).debug("Grouping performed {*}", {
+            Logger.getChild(["engine", "group"]).debug("Grouping performed {*}", {
                 calcTime: end - start,
-                mathState: {
-                    latex: result.getFullLaTeXExpression(),
-                    unicode: result.getFullUnicodeExpression(),
-                },
                 totalValue: totalValue.toString(),
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "group" });
             }
             throw e;
@@ -582,17 +726,31 @@ export class CurrencyNBR {
     }
 
     /**
-     * Finaliza o cálculo e retorna um objeto de saída para formatação.
-     * @param decimals A precisão padrão desejada para o output (default: 6).
-     * @param options Opções de formatação e arredondamento.
+     * Finaliza o cálculo e retorna um objeto de saída (CalcAUDOutput) para formatação.
+     *
+     * @param decimals Precisão decimal desejada para o output (padrão: 6).
+     * @param options Opções de formatação, locale e arredondamento.
+     * @returns Objeto de saída formatável.
+     * @throws CalcAUDError se a precisão for negativa ou inválida.
+     *
+     * @example
+     * ```ts
+     * // Saída Monetária Brasileira
+     * const out = CalcAUD.from(10.5).commit(2);
+     * console.log(out.toMonetary()); // "R$ 10,50"
+     *
+     * // Saída com arredondamento bancário
+     * const out = CalcAUD.from("1.255").commit(2, { roundingMethod: "HALF-EVEN" });
+     * console.log(out.toString()); // "1.26"
+     * ```
      */
     public commit(
         decimals: number = DEFAULT_DISPLAY_PRECISION,
-        options?: CurrencyNBROutputOptions,
-    ): CurrencyNBROutput {
+        options?: CalcAUDOutputOptions,
+    ): CalcAUDOutput {
         const start = performance.now();
         if (decimals < 0 || !Number.isInteger(decimals)) {
-            throw new CurrencyNBRError({
+            throw new CalcAUDError({
                 type: "invalid-precision",
                 title: "Precisão Decimal Inválida",
                 detail: `O número de casas decimais deve ser um inteiro positivo. Recebido: ${decimals}`,
@@ -601,7 +759,7 @@ export class CurrencyNBR {
         }
         try {
             const finalValue = this.accumulatedValue + this.activeTermValue;
-            const result = new CurrencyNBROutput(
+            const result = new CalcAUDOutput(
                 finalValue,
                 decimals,
                 this.getFullLaTeXExpression(),
@@ -610,14 +768,14 @@ export class CurrencyNBR {
                 options,
             );
             const end = performance.now();
-            getLogger(["currency-nbr-a11y", "engine", "commit"]).debug("Commit performed {*}", {
+            Logger.getChild(["engine", "commit"]).debug("Commit performed {*}", {
                 calcTime: end - start,
                 finalValue: finalValue.toString(),
                 decimals,
             });
             return result;
         } catch (e) {
-            if (!(e instanceof CurrencyNBRError)) {
+            if (!(e instanceof CalcAUDError)) {
                 logFatal(e, { operation: "commit", decimals, options });
             }
             throw e;
@@ -636,8 +794,6 @@ export class CurrencyNBR {
     private getFullVerbalExpression(): string {
         let verbal = this.accumulatedVerbal;
         if (this.accumulatedVerbal && this.activeTermVerbal) {
-            // Verifica se o termo ativo já começa com token de subtração (negativo)
-            // Se sim, usa espaço, senão usa ADD
             verbal += this.activeTermVerbal.startsWith(VERBAL_TOKENS.SUB) ? " " : VERBAL_TOKENS.ADD;
         }
         verbal += this.activeTermVerbal;

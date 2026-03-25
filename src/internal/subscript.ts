@@ -1,9 +1,21 @@
 /**
- * Converte caracteres normais para seus equivalentes subscritos (ou pseudo-subscritos) em Unicode.
+ * @module Subscript
+ * Utilitário para conversão de caracteres alfanuméricos em seus equivalentes
+ * subscritos Unicode. Utilizado primariamente na geração de representações
+ * auditáveis em texto puro (Unicode).
+ */
+
+/**
+ * Converte caracteres normais para seus equivalentes subscritos em Unicode.
+ *
+ * Suporta dígitos de 0-9, letras básicas para abreviações de arredondamento
+ * e símbolos operacionais comuns.
+ *
  * @param s A string original.
  * @returns A string convertida para subscrito.
  */
 export function toSubscript(s: string): string {
+    // Mapeamento estático para garantir performance e evitar overhead de regex
     const map: Record<string, string> = {
         "0": "₀",
         "1": "₁",
@@ -16,12 +28,12 @@ export function toSubscript(s: string): string {
         "8": "₈",
         "9": "₉",
         "A": "ₐ",
-        "B": "ʙ", // Small cap B
-        "C": "ᴄ", // Small cap C
-        "D": "ᴅ", // Small cap D
+        "B": "ʙ",
+        "C": "ᴄ",
+        "D": "ᴅ",
         "E": "ₑ",
-        "F": "ꜰ", // Small cap F
-        "G": "ɢ", // Small cap G
+        "F": "ꜰ",
+        "G": "ɢ",
         "H": "ₕ",
         "I": "ᵢ",
         "J": "ⱼ",
@@ -31,16 +43,16 @@ export function toSubscript(s: string): string {
         "N": "ₙ",
         "O": "ₒ",
         "P": "ₚ",
-        "Q": "ǫ", // Small cap Q
+        "Q": "ǫ",
         "R": "ᵣ",
         "S": "ₛ",
         "T": "ₜ",
         "U": "ᵤ",
         "V": "ᵥ",
-        "W": "ᴡ", // Small cap W
+        "W": "ᴡ",
         "X": "ₓ",
-        "Y": "ʏ", // Small cap Y
-        "Z": "ᴢ", // Small cap Z
+        "Y": "ʏ",
+        "Z": "ᴢ",
         "+": "₊",
         "-": "₋",
         "(": "₍",

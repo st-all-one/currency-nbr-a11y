@@ -1,10 +1,10 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBRError } from "../src/errors.ts";
+import { CalcAUDError } from "../src/errors.ts";
 
-describe("CurrencyNBRError (RFC 7807)", () => {
+describe("CalcAUDError (RFC 7807)", () => {
     it("deve seguir a estrutura JSON da RFC 7807", () => {
-        const err = new CurrencyNBRError({
+        const err = new CalcAUDError({
             type: "division-by-zero",
             title: "Operação Matemática Inválida",
             detail: "Tentativa de divisão por zero.",
@@ -16,7 +16,7 @@ describe("CurrencyNBRError (RFC 7807)", () => {
 
         const json = err.toJSON();
 
-        expect(json.type).toBe("https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero");
+        expect(json.type).toBe("https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero");
         expect(json.title).toBe("Operação Matemática Inválida");
         expect(json.status).toBe(400);
         expect(json.detail).toBe("Tentativa de divisão por zero.");
@@ -28,7 +28,7 @@ describe("CurrencyNBRError (RFC 7807)", () => {
     });
 
     it("deve funcionar sem campos opcionais de math_audit", () => {
-        const err = new CurrencyNBRError({
+        const err = new CalcAUDError({
             type: "generic-error",
             title: "Erro Genérico",
             detail: "Ocorreu um erro inesperado.",

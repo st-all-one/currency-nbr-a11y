@@ -59,7 +59,7 @@
   internalValue: "0"
 }
 2026-03-25 01:33:15.963 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -132,7 +132,7 @@
   internalValue: "0"
 }
 2026-03-25 01:35:45.676 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -205,7 +205,7 @@
   internalValue: "0"
 }
 2026-03-25 01:36:27.872 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -278,7 +278,7 @@
   internalValue: "0"
 }
 2026-03-25 01:36:53.227 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -351,7 +351,7 @@
   internalValue: "0"
 }
 2026-03-25 01:41:00.161 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -424,7 +424,7 @@
   internalValue: "0"
 }
 2026-03-25 02:48:57.385 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -497,7 +497,7 @@
   internalValue: "0"
 }
 2026-03-25 02:49:51.793 +00:00 [ERR] currency-nbr-a11y·errors: Operação Matemática Inválida {
-  type: "https://github.com/st-all-one/currency-nbr-a11y/tree/main/errors/division-by-zero",
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
   title: "Operação Matemática Inválida",
   status: 400,
   detail: "Tentativa de divisão por um montante acumulado igual a zero.",
@@ -508,4 +508,75 @@
     operation: "division"
   },
   timestamp: "2026-03-25T02:49:51.793Z"
+}
+2026-03-25 03:57:51.371 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.9758250000000146,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 03:57:51.378 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.2169969999999921,
+  value: "50",
+  type: "number",
+  internalValue: "50000000000000"
+}
+2026-03-25 03:57:51.383 +00:00 [DBG] calc-aud-nbr-a11y·engine·add: Addition performed {
+  calcTime: 4.919912000000011,
+  currentAccumulatedResult: "150000000000000",
+  addingValue: "50000000000000"
+}
+2026-03-25 03:57:51.384 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.21085100000004786,
+  finalValue: "150000000000000",
+  decimals: 6
+}
+2026-03-25 03:57:51.387 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.05315000000001646,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 03:57:51.387 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.01913600000000315,
+  finalValue: "100000000000000",
+  decimals: 6
+}
+2026-03-25 03:57:51.388 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.49810999999999694, result: "100.000000" }
+2026-03-25 03:57:51.389 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.004190999999991618, result: "100.000000" }
+2026-03-25 03:57:51.390 +00:00 [INF] calc-aud-nbr-a11y·output·monetary: Monetary output generated {
+  calcTime: 0.7129419999999982,
+  result: "R$ 100,000000",
+  locale: "pt-BR",
+  currency: "BRL"
+}
+2026-03-25 03:57:51.390 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.004749000000003889, result: "100.000000" }
+2026-03-25 03:57:51.390 +00:00 [INF] calc-aud-nbr-a11y·output·latex: LaTeX output generated {
+  calcTime: 0.36666700000000674,
+  result: "$$ 100 = \\text{round}_{NBR}(100, 6) = 100.000000 $$"
+}
+2026-03-25 03:57:51.394 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.05014600000004066,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 03:57:51.395 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.04539700000003677,
+  value: "0",
+  type: "number",
+  internalValue: "0"
+}
+2026-03-25 03:57:51.396 +00:00 [ERR] calc-aud-nbr-a11y·errors·division-by-zero: Operação Matemática Inválida {
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
+  title: "Operação Matemática Inválida",
+  status: 400,
+  detail: "Tentativa de divisão por zero.",
+  instance: "audit:err:94d1edad-bd0b-481b-8e12-37795c154b22",
+  math_audit: {
+    latex: "\\frac{100}{0}",
+    unicode: "100 ÷ 0",
+    operation: "division"
+  },
+  timestamp: "2026-03-25T03:57:51.396Z"
 }

@@ -1,10 +1,12 @@
 /**
- * Configurações globais de precisão e escala para cálculos monetários.
+ * @module Constants
+ * Configurações globais de precisão, escala e ativos estáticos para a biblioteca CalcAUD.
  */
 
 /**
  * Precisão decimal interna para todos os cálculos da biblioteca (12 casas).
- * Garante segurança contra erros de arredondamento em operações sucessivas.
+ * O uso de 12 casas garante que erros de arredondamento em operações sucessivas
+ * não afetem as 6 casas de exibição padrão ou as 2 casas fiscais comuns.
  */
 export const INTERNAL_CALCULATION_PRECISION = 12;
 
@@ -15,11 +17,14 @@ export const DEFAULT_DISPLAY_PRECISION = 6;
 
 /**
  * Fator de escala para representação BigInt interna (10^12).
+ * Multiplicamos os valores por este fator para trabalhar apenas com inteiros (BigInt),
+ * eliminando completamente os problemas de imprecisão do padrão IEEE 754 (float).
  */
 export const INTERNAL_SCALE_FACTOR = 10n ** BigInt(INTERNAL_CALCULATION_PRECISION);
 
 /**
- * CSS Minificado do projeto Katex, v0.16.40.
+ * CSS Minificado do projeto KaTeX, v0.16.40.
+ * Utilizado para renderização de fórmulas matemáticas auditáveis em HTML.
  * @copyright © 2026 Khan Academy and other contributors
  */
 export const KATEX_CSS_MINIFIED =

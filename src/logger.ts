@@ -1,3 +1,7 @@
 import { getLogger } from "@logtape";
 
-export const Logger = getLogger(["currency-nbr-a11y"]);
+/**
+ * Logger central da biblioteca CalcAUD.
+ * Utiliza o framework LogTape para telemetria estruturada e rastreável.
+ */
+export const Logger = getLogger(["calc-aud-nbr-a11y"]);

@@ -5,22 +5,29 @@ import { KATEX_CSS_MINIFIED } from "../constants.ts";
 let cachedKaTeXCSS: string | null = null;
 
 /**
- * Gera o HTML para exibição da fórmula usando KaTeX.
+ * Gera o HTML para exibição da fórmula matemática utilizando o motor KaTeX.
  *
- * @param latexExpression A expressão LaTeX completa.
- * @param result O resultado formatado.
- * @param verbalDescription A descrição verbal para acessibilidade (aria-label).
- * @returns O HTML completo.
+ * O HTML gerado inclui tanto o suporte visual (MathML/SVG via KaTeX) quanto
+ * suporte de acessibilidade via 'aria-label', permitindo que leitores de
+ * tela narrem o cálculo corretamente.
+ *
+ * @param latexExpression A expressão LaTeX acumulada.
+ * @param result O resultado final formatado.
+ * @param verbalDescription A descrição verbalizada para acessibilidade.
+ * @returns String contendo HTML e CSS inline.
  */
 export function generateHTML(latexExpression: string, result: string, verbalDescription: string): string {
+    // Injetamos o CSS do KaTeX apenas uma vez (cache estático) para otimizar o payload HTML.
     if (!cachedKaTeXCSS) {
         cachedKaTeXCSS = KATEX_CSS_MINIFIED;
     }
+
     const fullLatex = `${latexExpression} = ${result}`;
     const renderedHTML = katex.renderToString(fullLatex, {
         displayMode: true,
         throwOnError: false,
     });
+
     return `
 <div class="auditable-amount-container" aria-label="${verbalDescription}">
   <style>

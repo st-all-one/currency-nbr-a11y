@@ -1,15 +1,15 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBR } from "../mod.ts";
+import { CalcAUD } from "../mod.ts";
 
 describe("Cenários Fiscais (Integration)", () => {
     it("Juros Compostos Pro-Rata Die (Base 252 dias úteis)", () => {
         // PV = 1000, i = 10% a.a. (0.10), n = 1 dia
         // FV = PV * (1 + i)^(1/252)
-        const pv = CurrencyNBR.from(1000);
+        const pv = CalcAUD.from(1000);
         const taxaAnual = 0.10;
         const result = pv.mult(
-            CurrencyNBR.from(1).add(taxaAnual).group().pow("1/252"),
+            CalcAUD.from(1).add(taxaAnual).group().pow("1/252"),
         ).commit(8);
 
         // (1 + 0.10)^(1/252) approx 1.000378...
@@ -18,10 +18,10 @@ describe("Cenários Fiscais (Integration)", () => {
     });
 
     it("Liquidação de Debênture (Principal + Juros - IRRF + Multa)", () => {
-        const principal = CurrencyNBR.from(10000);
-        const juros = CurrencyNBR.from(500);
+        const principal = CalcAUD.from(10000);
+        const juros = CalcAUD.from(500);
         const irrfPercent = 0.15;
-        const multa = CurrencyNBR.from(50);
+        const multa = CalcAUD.from(50);
 
         const lucro = juros;
         const irrf = lucro.mult(irrfPercent);
@@ -37,10 +37,10 @@ describe("Cenários Fiscais (Integration)", () => {
         const parcelasCount = 3;
         const taxaMensal = 0.01;
 
-        const amortizacao = CurrencyNBR.from(principalVal).div(parcelasCount).group();
+        const amortizacao = CalcAUD.from(principalVal).div(parcelasCount).group();
 
-        let saldoDevedor = CurrencyNBR.from(principalVal);
-        let totalPago = CurrencyNBR.from(0);
+        let saldoDevedor = CalcAUD.from(principalVal);
+        let totalPago = CalcAUD.from(0);
 
         for (let i = 0; i < parcelasCount; i++) {
             const juros = saldoDevedor.group().mult(taxaMensal);
@@ -64,8 +64,8 @@ describe("Cenários Fiscais (Integration)", () => {
         // PMT = PV * [i(1+i)^n] / [(1+i)^n - 1]
         // (1+i)^n = 1.1^3 = 1.331
         // PMT = 1000 * [0.1 * 1.331] / [1.331 - 1] = 1000 * 0.1331 / 0.331 approx 402.11
-        const fator = CurrencyNBR.from(1).add(i).group().pow(n).group();
-        const pmt = CurrencyNBR.from(principal)
+        const fator = CalcAUD.from(1).add(i).group().pow(n).group();
+        const pmt = CalcAUD.from(principal)
             .mult(fator.mult(i).group())
             .div(fator.sub(1).group())
             .commit(2);
@@ -73,10 +73,10 @@ describe("Cenários Fiscais (Integration)", () => {
         expect(pmt.toString()).toBe("402.11");
 
         // Verificação de resíduo
-        let saldo = CurrencyNBR.from(principal);
+        let saldo = CalcAUD.from(principal);
         for (let k = 0; k < n - 1; k++) {
             const juros = saldo.group().mult(i);
-            const amortizacao = CurrencyNBR.from(pmt.toString()).sub(juros);
+            const amortizacao = CalcAUD.from(pmt.toString()).sub(juros);
             saldo = saldo.sub(amortizacao);
         }
 
@@ -96,11 +96,11 @@ describe("Cenários Fiscais (Integration)", () => {
         // 100 / 3 = 33.3333...
         // No rateio real, alguém paga o centavo extra.
         // Simulamos o rateio manual:
-        const base = CurrencyNBR.from(total).div(partes).commit(2, { roundingMethod: "TRUNCATE" });
+        const base = CalcAUD.from(total).div(partes).commit(2, { roundingMethod: "TRUNCATE" });
         const valorBase = Number(base.toString()); // 33.33
 
         const somaBase = valorBase * (partes - 1); // 66.66
-        const ultimaParte = CurrencyNBR.from(total).sub(somaBase).commit(2); // 33.34
+        const ultimaParte = CalcAUD.from(total).sub(somaBase).commit(2); // 33.34
 
         expect(valorBase).toBe(33.33);
         expect(ultimaParte.toString()).toBe("33.34");

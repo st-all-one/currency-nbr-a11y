@@ -1,29 +1,46 @@
-import type { CurrencyNBROutput } from "../output.ts";
-import type { CurrencyNBROutputOptions } from "./options.ts";
+import type { CalcAUDOutput } from "../output.ts";
+import type { CalcAUDOutputOptions } from "./options.ts";
 
 /**
- * Interface funcional para saídas customizadas agnósticas.
- * Toutput é o tipo de retorno definido pelo desenvolvedor (ex: Promise<void>, Uint8Array, etc).
- * Permite acesso via 'this' (instância completa) ou via objeto de contexto.
+ * Interface funcional para criação de processadores de saída customizados.
+ *
+ * Permite que desenvolvedores estendam a biblioteca CalcAUD para suportar
+ * formatos de exportação proprietários ou protocolos específicos.
+ *
+ * @template Toutput O tipo de retorno definido pelo desenvolvedor.
+ *
+ * @example
+ * ```ts
+ * // Exemplo: Exportador de Log Simples
+ * const logProcessor: ICalcAUDCustomOutput<void> = (ctx) => {
+ *   console.log(`Valor Bruto: ${ctx.rawData.value}`);
+ * };
+ * res.toCustomOutput(logProcessor);
+ * ```
  */
-export interface ICurrencyNBRCustomOutput<Toutput> {
-    (this: CurrencyNBROutput, context: ICurrencyNBRCustomOutputContext): Toutput;
+export interface ICalcAUDCustomOutput<Toutput> {
+    (this: CalcAUDOutput, context: ICalcAUDCustomOutputContext): Toutput;
 }
 
 /**
- * Interface genérica para o contexto passado ao processador customizado.
+ * Contexto de dados e métodos fornecido aos processadores customizados.
+ *
+ * Contém tanto os dados brutos (BigInt, LaTeX) quanto acesso aos métodos
+ * de formatação padrão para reutilização.
  */
-export interface ICurrencyNBRCustomOutputContext {
+export interface ICalcAUDCustomOutputContext {
+    /** Dados puros do cálculo para processamento direto. */
     rawData: {
         readonly value: bigint;
         readonly decimalPrecision: number;
         readonly latexExpression: string;
         readonly verbalExpression: string;
         readonly unicodeExpression: string;
-        readonly options: Readonly<Required<CurrencyNBROutputOptions>>;
+        readonly options: Readonly<Required<CalcAUDOutputOptions>>;
     };
+    /** Acesso aos métodos de saída padrão da biblioteca. */
     method: Pick<
-        CurrencyNBROutput,
+        CalcAUDOutput,
         | "toString"
         | "toFloatNumber"
         | "toCentsInBigInt"

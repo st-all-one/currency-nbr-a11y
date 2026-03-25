@@ -1,44 +1,44 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { CurrencyNBR } from "../mod.ts";
+import { CalcAUD } from "../mod.ts";
 
 describe("Parsing e I/O (Unit)", () => {
     describe("Sanitização de Entrada", () => {
         it("deve REJEITAR string com vírgula (formato BR: '1.234,56')", () => {
-            expect(() => CurrencyNBR.from("1.234,56")).toThrow();
+            expect(() => CalcAUD.from("1.234,56")).toThrow();
         });
 
         it("deve REJEITAR string com ponto (formato US: '1,234.56')", () => {
-            expect(() => CurrencyNBR.from("1,234.56")).toThrow();
+            expect(() => CalcAUD.from("1,234.56")).toThrow();
         });
 
         it("deve fazer parse de inteiro nativo do JS", () => {
-            const result = CurrencyNBR.from(1234).commit(0);
+            const result = CalcAUD.from(1234).commit(0);
             expect(result.toString()).toBe("1234");
         });
 
         it("deve fazer parse de float nativo do JS", () => {
-            const result = CurrencyNBR.from(1234.56).commit(2);
+            const result = CalcAUD.from(1234.56).commit(2);
             expect(result.toString()).toBe("1234.56");
         });
 
         it("deve fazer parse direto de BigInt (já escalado)", () => {
             // Se passar BigInt, a lib multiplica pelo SCALE_FACTOR
-            const result = CurrencyNBR.from(100n).commit(0);
+            const result = CalcAUD.from(100n).commit(0);
             expect(result.toString()).toBe("100");
         });
 
         it("deve rejeitar strings malformadas ('1.23.4')", () => {
-            expect(() => CurrencyNBR.from("1.23.4")).toThrow();
+            expect(() => CalcAUD.from("1.23.4")).toThrow();
         });
 
         it("deve rejeitar strings não numéricas ('abc')", () => {
-            expect(() => CurrencyNBR.from("abc")).toThrow();
+            expect(() => CalcAUD.from("abc")).toThrow();
         });
     });
 
     describe("Validação de Exportação (Auditoria)", () => {
-        const calc = CurrencyNBR.from(100).add(50).div(2).pow(2).commit(2);
+        const calc = CalcAUD.from(100).add(50).div(2).pow(2).commit(2);
 
         it("deve validar a string exportada em LaTeX (verifica chaves e comandos)", () => {
             const latex = calc.toLaTeX();

@@ -1,14 +1,14 @@
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { configure, type LogRecord, type Sink } from "@logtape";
-import { CurrencyNBR } from "../mod.ts";
+import { CalcAUD } from "../mod.ts";
 import { formatMonetary } from "../src/output_helpers/formatting.ts";
 import { generateImageBuffer } from "../src/output_helpers/image_generator.ts";
 import { roundCeil, roundHalfEven, roundHalfUp, roundTruncate } from "../src/output_helpers/rounding_strategies.ts";
 import { toSuperscript } from "../src/internal/superscript.ts";
 import { parseStringValue } from "../src/internal/parser.ts";
 import { calculateBigIntPower, calculateNthRoot } from "../src/internal/math_utils.ts";
-import { CurrencyNBRError } from "../src/errors.ts";
+import { CalcAUDError } from "../src/errors.ts";
 
 describe("Edge Cases e Robustez (logFatal)", () => {
     const records: LogRecord[] = [];
@@ -26,7 +26,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
     });
 
     it("deve disparar logFatal se ocorrer um erro inesperado em group()", () => {
-        const val = CurrencyNBR.from(100);
+        const val = CalcAUD.from(100);
 
         // Sabotagem via injeção de erro em propriedade privada
         Object.defineProperty(val, "activeTermValue", {
@@ -53,7 +53,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
     });
 
     it("deve disparar logFatal se ocorrer um erro inesperado em add()", () => {
-        const val = CurrencyNBR.from(100);
+        const val = CalcAUD.from(100);
 
         // Sabotagem via injeção de erro em propriedade privada
         Object.defineProperty(val, "accumulatedValue", {
@@ -191,7 +191,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
                 parseStringValue("123,45");
                 throw new Error("Deveria ter falhado");
             } catch (e) {
-                expect(e).toBeInstanceOf(CurrencyNBRError);
+                expect(e).toBeInstanceOf(CalcAUDError);
             }
         });
 
@@ -212,7 +212,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
                 calculateBigIntPower(10n, -1n);
                 throw new Error("Não deveria chegar aqui");
             } catch (e) {
-                expect(e).toBeInstanceOf(CurrencyNBRError);
+                expect(e).toBeInstanceOf(CalcAUDError);
                 expect((e as any).type).toContain("negative-exponent");
             }
         });
@@ -222,7 +222,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
                 calculateNthRoot(10n, 0n);
                 throw new Error("Não deveria chegar aqui");
             } catch (e) {
-                expect(e).toBeInstanceOf(CurrencyNBRError);
+                expect(e).toBeInstanceOf(CalcAUDError);
                 expect((e as any).type).toContain("invalid-root-index");
             }
         });
@@ -256,7 +256,7 @@ describe("Edge Cases e Robustez (logFatal)", () => {
     describe("Engine Branching (Edge Cases)", () => {
         it("pow - deve gerar expressões corretas para potência fracionária com numerador diferente de 1", () => {
             // 8^(2/3) = raiz cúbica de (8^2) = raiz cúbica de 64 = 4
-            const calc = CurrencyNBR.from(8).pow("2/3");
+            const calc = CalcAUD.from(8).pow("2/3");
             const output = calc.commit(2);
 
             // 1. Validar LaTeX: deve conter a potência interna ^{2}
