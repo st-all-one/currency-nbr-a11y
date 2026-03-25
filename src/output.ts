@@ -9,7 +9,7 @@ import {
     type RoundingMethod,
     VALID_ROUNDING_METHODS,
 } from "./output_helpers/options.ts";
-import { applyRounding } from "./output_helpers/rounding_manager.ts";
+import { outputLazyRounding } from "./output_helpers/lazy_rounding.ts";
 import { LOCALE_CURRENCY_MAP } from "./output_helpers/locales.ts";
 import { CurrencyNBRError } from "./errors.ts";
 import { Logger } from "./logger.ts";
@@ -22,7 +22,8 @@ import type { ICurrencyNBRCustomOutput } from "./output_helpers/custom_formatter
 export const AVAILABLE_OUTPUT_METHODS = [
     "toString",
     "toFloatNumber",
-    "toBigInt",
+    "toCentsInBigInt",
+    "toRawInternalBigInt",
     "toMonetary",
     "toLaTeX",
     "toHTML",
@@ -35,6 +36,18 @@ export const AVAILABLE_OUTPUT_METHODS = [
  * Tipo representando as chaves de saída permitidas.
  */
 export type CurrencyOutputMethod = typeof AVAILABLE_OUTPUT_METHODS[number];
+
+/**
+ * Elementos padrão incluídos na exportação JSON.
+ */
+const DEFAULT_JSON_ELEMENTS: CurrencyOutputMethod[] = [
+    "toString",
+    "toCentsInBigInt",
+    "toMonetary",
+    "toLaTeX",
+    "toUnicode",
+    "toVerbalA11y",
+];
 
 /**
  * Siglas para os métodos de arredondamento.
@@ -57,6 +70,10 @@ export class CurrencyNBROutput {
     private readonly verbalExpression: string;
     private readonly unicodeExpression: string;
     private readonly options: Required<CurrencyNBROutputOptions>;
+
+    // Cache privado para o arredondamento preguiçoso
+    private _cachedStringValue: string | null = null;
+    private _cachedCentsValue: bigint | null = null;
 
     constructor(
         value: bigint,
@@ -92,7 +109,36 @@ export class CurrencyNBROutput {
             });
         }
 
-        this.options = { ...DEFAULT_OPTIONS, ...options };
+        const resolvedLocale = options?.locale ?? DEFAULT_OPTIONS.locale;
+        const resolvedCurrency = options?.currency ??
+            (options?.locale ? LOCALE_CURRENCY_MAP[options.locale] : DEFAULT_OPTIONS.currency);
+
+        this.options = {
+            ...DEFAULT_OPTIONS,
+            ...options,
+            locale: resolvedLocale,
+            currency: resolvedCurrency,
+        };
+    }
+
+    /**
+     * Resolve o cache de arredondamento de forma preguiçosa.
+     * Garante que o cálculo de arredondamento e formatação para string
+     * ocorra apenas uma vez para o objeto de saída.
+     */
+    private _resolveLazyCache(): void {
+        if (this._cachedStringValue !== null && this._cachedCentsValue !== null) {
+            return;
+        }
+
+        const result = outputLazyRounding(
+            this.value,
+            this.defaultDecimals,
+            this.options.roundingMethod,
+        );
+
+        this._cachedStringValue = result.stringValue;
+        this._cachedCentsValue = result.centsValue;
     }
 
     /**
@@ -100,13 +146,8 @@ export class CurrencyNBROutput {
      */
     public toString(): string {
         const start = performance.now();
-        const rounded = applyRounding(
-            this.value,
-            this.options.roundingMethod,
-            INTERNAL_CALCULATION_PRECISION,
-            this.defaultDecimals,
-        );
-        const result = formatBigIntToString(rounded, this.defaultDecimals);
+        this._resolveLazyCache();
+        const result = this._cachedStringValue!;
         const end = performance.now();
         Logger.getChild(["output", "string"]).info("String output generated {*}", {
             calcTime: end - start,
@@ -130,13 +171,29 @@ export class CurrencyNBROutput {
     }
 
     /**
-     * Retorna o valor como BigInt.
+     * Retorna o valor como BigInt (Cents), arredondado para a escala desejada.
+     * Ex: "15.00" (interno 15000000000000n) retorna 1500n para 2 casas decimais.
      */
-    public toBigInt(): bigint {
+    public toCentsInBigInt(): bigint {
+        const start = performance.now();
+        this._resolveLazyCache();
+        const result = this._cachedCentsValue!;
+        const end = performance.now();
+        Logger.getChild(["output", "toCentsInBigInt"]).info("Cents BigInt output generated {*}", {
+            calcTime: end - start,
+            result: result.toString(),
+        });
+        return result;
+    }
+
+    /**
+     * Retorna o valor bruto BigInt usado internamente (escala fixa de 10^12).
+     */
+    public toRawInternalBigInt(): bigint {
         const start = performance.now();
         const result = this.value;
         const end = performance.now();
-        Logger.getChild(["output", "toBigInt"]).info("BigInt output generated {*}", {
+        Logger.getChild(["output", "toRawInternalBigInt"]).info("Raw Internal BigInt output generated {*}", {
             calcTime: end - start,
             result: result.toString(),
         });
@@ -149,7 +206,7 @@ export class CurrencyNBROutput {
     public toMonetary(): string {
         const start = performance.now();
         const targetLocale = this.options.locale;
-        const targetCurrency = LOCALE_CURRENCY_MAP[targetLocale] ?? "BRL";
+        const targetCurrency = this.options.currency;
         const result = formatMonetary(this.toString(), targetLocale, targetCurrency);
         const end = performance.now();
         Logger.getChild(["output", "toMonetary"]).info("Monetary output generated {*}", {
@@ -276,11 +333,13 @@ export class CurrencyNBROutput {
      */
     public toJson(elements: CurrencyOutputMethod[] = []): string {
         const start = performance.now();
-        const targetElements = elements.length > 0 ? elements : AVAILABLE_OUTPUT_METHODS;
+        const targetElements = elements.length > 0 ? elements : DEFAULT_JSON_ELEMENTS;
         const resultObj: Record<string, unknown> = {
             meta: {
                 options: this.options,
                 decimals: this.defaultDecimals,
+                currency: this.options.currency,
+                modStrategy: this.options.modStrategy,
             },
         };
 
@@ -292,8 +351,11 @@ export class CurrencyNBROutput {
                 case "toFloatNumber":
                     resultObj[key] = this.toFloatNumber();
                     break;
-                case "toBigInt":
-                    resultObj[key] = this.toBigInt().toString();
+                case "toCentsInBigInt":
+                    resultObj[key] = this.toCentsInBigInt().toString();
+                    break;
+                case "toRawInternalBigInt":
+                    resultObj[key] = this.toRawInternalBigInt().toString();
                     break;
                 case "toMonetary":
                     resultObj[key] = this.toMonetary();

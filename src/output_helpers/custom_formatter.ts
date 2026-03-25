@@ -26,7 +26,8 @@ export interface ICurrencyNBRCustomOutputContext {
         CurrencyNBROutput,
         | "toString"
         | "toFloatNumber"
-        | "toBigInt"
+        | "toCentsInBigInt"
+        | "toRawInternalBigInt"
         | "toMonetary"
         | "toLaTeX"
         | "toHTML"

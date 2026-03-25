@@ -34,6 +34,13 @@ export interface CurrencyNBROutputOptions {
     locale?: LocaleLang;
 
     /**
+     * Define a moeda para formatação (ex: "BRL", "USD", "CNY").
+     * Se não definido, utiliza a moeda associada ao locale.
+     * @default "BRL" (via pt-BR)
+     */
+    currency?: string;
+
+    /**
      * Define a estratégia de cálculo de módulo/divisão inteira.
      * @default "euclidean"
      */
@@ -46,5 +53,6 @@ export interface CurrencyNBROutputOptions {
 export const DEFAULT_OPTIONS: Required<CurrencyNBROutputOptions> = {
     roundingMethod: "NBR-5891",
     locale: "pt-BR",
+    currency: "BRL",
     modStrategy: "euclidean",
 };

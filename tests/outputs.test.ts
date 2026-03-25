@@ -24,9 +24,9 @@ describe("Outputs Exaustivos (Unit)", () => {
         });
     });
 
-    describe("toBigInt", () => {
+    describe("toRawInternalBigInt", () => {
         it("deve retornar o valor bruto escalado (10^12)", () => {
-            const raw = output.toBigInt();
+            const raw = output.toRawInternalBigInt();
             expect(typeof raw).toBe("bigint");
             // 150.75 * 10^12 = 150750000000000
             expect(raw.toString()).toBe("150750000000000");
@@ -128,20 +128,18 @@ describe("Outputs Exaustivos (Unit)", () => {
 
             expect(data.meta).toBeDefined();
             expect(data.toString).toBe("150.75");
-            expect(data.toFloatNumber).toBe(150.75);
             expect(data.toMonetary).toBeDefined();
             expect(data.toLaTeX).toBeDefined();
             expect(data.toUnicode).toBeDefined();
             expect(data.toVerbalA11y).toBeDefined();
-            expect(data.toImageBuffer).toBeInstanceOf(Array); // Convertido para array no JSON
         });
 
         it("deve retornar apenas elementos selecionados", () => {
-            const jsonStr = output.toJson(["toString", "toBigInt"]);
+            const jsonStr = output.toJson(["toString", "toRawInternalBigInt"]);
             const data = JSON.parse(jsonStr);
 
             expect(data.toString).toBe("150.75");
-            expect(data.toBigInt).toBe("150750000000000");
+            expect(data.toRawInternalBigInt).toBe("150750000000000");
             expect(data.toFloatNumber).toBeUndefined();
             expect(data.toMonetary).toBeUndefined();
         });

@@ -326,9 +326,9 @@ export class CurrencyNBR {
             }
 
             let quotient: bigint;
-            let latexWrapper: [string, string];
-            let unicodeWrapper: [string, string];
-            let verbalOp: string;
+            let nextActiveExpr: string;
+            let nextActiveUnicode: string;
+            let nextActiveVerbal: string;
 
             if (strategy === "euclidean") {
                 // Euclidean (Floor Division) Logic
@@ -338,26 +338,18 @@ export class CurrencyNBR {
                 if (remainder !== 0n && ((this.activeTermValue < 0n) !== (otherValue < 0n))) {
                     quotient -= 1n;
                 }
-                latexWrapper = ["\\lfloor", "\\rfloor"];
-                unicodeWrapper = ["⌊", "⌋"];
-                verbalOp = VERBAL_TOKENS.DIV_INT;
+                nextActiveExpr = `\\lfloor \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} \\rfloor`;
+                nextActiveUnicode = `⌊${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()}⌋`;
+                nextActiveVerbal = `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_E_SUF}`;
             } else {
                 // Truncated (Native) Logic
                 quotient = this.activeTermValue / otherValue;
-                latexWrapper = ["\\text{trunc}\\left(", "\\right)"];
-                unicodeWrapper = ["trunc(", ")"];
-                verbalOp = " trunc "; // Distinct verbal for truncate? Or reuse DIV_INT? Let's use "trunc" for clarity if strategy is explicit.
+                nextActiveExpr = `\\operatorname{trunc}\\left(\\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}}\\right)`;
+                nextActiveUnicode = `trun(${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()})`;
+                nextActiveVerbal = `${this.activeTermVerbal}${VERBAL_TOKENS.DIV_INT_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.DIV_INT_T_SUF}`;
             }
 
             const nextActiveValue = quotient * INTERNAL_SCALE_FACTOR;
-
-            const nextActiveExpr = `${
-                latexWrapper[0]
-            } \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} ${latexWrapper[1]}`;
-            const nextActiveVerbal = `${this.activeTermVerbal}${verbalOp}${other.getFullVerbalExpression()}`;
-            const nextActiveUnicode = `${
-                unicodeWrapper[0]
-            }${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()}${unicodeWrapper[1]}`;
 
             const result = new CurrencyNBR(
                 this.accumulatedValue,
@@ -408,6 +400,9 @@ export class CurrencyNBR {
             }
 
             let nextActiveValue: bigint;
+            let nextActiveExpr: string;
+            let nextActiveUnicode: string;
+            let nextActiveVerbal: string;
 
             if (strategy === "euclidean") {
                 // Módulo Euclidiano: garante que o resto seja sempre positivo
@@ -415,19 +410,18 @@ export class CurrencyNBR {
                 const rawMod = this.activeTermValue % otherValue;
                 const absDivisor = otherValue < 0n ? -otherValue : otherValue;
                 nextActiveValue = ((rawMod % absDivisor) + absDivisor) % absDivisor;
+
+                nextActiveExpr = `${this.activeTermExpression} \\bmod ${other.getFullLaTeXExpression()}`;
+                nextActiveUnicode = `${this.activeTermUnicode} mod ${other.getFullUnicodeExpression()}`;
+                nextActiveVerbal = `${VERBAL_TOKENS.MOD_E_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_E_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_E_SUF}`;
             } else {
                 // Resto Truncado (Padrão JS/C#/Java)
                 nextActiveValue = this.activeTermValue % otherValue;
+
+                nextActiveExpr = `${this.activeTermExpression} \\text{ rem } ${other.getFullLaTeXExpression()}`;
+                nextActiveUnicode = `${this.activeTermUnicode} % ${other.getFullUnicodeExpression()}`;
+                nextActiveVerbal = `${VERBAL_TOKENS.MOD_T_PRE}${this.activeTermVerbal}${VERBAL_TOKENS.MOD_T_MID}${other.getFullVerbalExpression()}${VERBAL_TOKENS.MOD_T_SUF}`;
             }
-
-            const opSymbol = strategy === "euclidean" ? "mod" : "%";
-            const latexOp = strategy === "euclidean" ? "\\bmod" : "\\text{ rem }";
-
-            const nextActiveExpr = `${this.activeTermExpression} ${latexOp} ${other.getFullLaTeXExpression()}`;
-            const nextActiveVerbal = `${this.activeTermVerbal}${
-                strategy === "euclidean" ? VERBAL_TOKENS.MOD : " resto "
-            }${other.getFullVerbalExpression()}`;
-            const nextActiveUnicode = `${this.activeTermUnicode} ${opSymbol} ${other.getFullUnicodeExpression()}`;
 
             const result = new CurrencyNBR(
                 this.accumulatedValue,

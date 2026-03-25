@@ -48,14 +48,14 @@ describe("Operações de Inteiros: divInt e mod (Unit)", () => {
             expect(output.toLaTeX()).toContain("\\text{round}_{NBR}(3, 0)");
             expect(output.toUnicode()).toContain("⌊10 ÷ 3⌋");
             expect(output.toUnicode()).toContain("roundₙʙᵣ(3, 0)");
-            expect(output.toVerbalA11y()).toContain("10 dividido inteiramente por 3");
+            expect(output.toVerbalA11y()).toContain("10 dividido por 3, com piso ao inteiro");
         });
 
         it("deve validar outputs auditáveis para divInt (Truncated)", () => {
             const output = CurrencyNBR.from(10).divInt(3, { modStrategy: "truncated" }).commit(0);
-            expect(output.toLaTeX()).toContain("\\text{trunc}\\left( \\frac{10}{3} \\right)");
-            expect(output.toUnicode()).toContain("trunc(10 ÷ 3)");
-            expect(output.toVerbalA11y()).toContain("10 trunc 3");
+            expect(output.toLaTeX()).toContain("\\operatorname{trunc}\\left(\\frac{10}{3}\\right)");
+            expect(output.toUnicode()).toContain("trun(10 ÷ 3)");
+            expect(output.toVerbalA11y()).toContain("10 dividido por 3, truncado ao inteiro");
         });
     });
 
@@ -98,7 +98,7 @@ describe("Operações de Inteiros: divInt e mod (Unit)", () => {
             expect(output.toLaTeX()).toContain("\\text{round}_{NBR}(1, 0)");
             expect(output.toUnicode()).toContain("10 mod 3");
             expect(output.toUnicode()).toContain("roundₙʙᵣ(1, 0)");
-            expect(output.toVerbalA11y()).toContain("10 módulo 3");
+            expect(output.toVerbalA11y()).toContain("módulo euclidiano de 10 por 3");
         });
 
         it("deve validar outputs auditáveis para mod (Truncated)", () => {
@@ -106,7 +106,7 @@ describe("Operações de Inteiros: divInt e mod (Unit)", () => {
             // Truncated uses \text{ rem }
             expect(output.toLaTeX()).toContain("10 \\text{ rem } 3");
             expect(output.toUnicode()).toContain("10 % 3");
-            expect(output.toVerbalA11y()).toContain("10 resto 3");
+            expect(output.toVerbalA11y()).toContain("resto da divisão de 10 por 3");
         });
     });
 
