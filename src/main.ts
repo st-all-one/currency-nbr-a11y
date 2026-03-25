@@ -418,11 +418,11 @@ export class CalcAUD {
      *
      * // Negativos (Euclidiana vs Truncada)
      * CalcAUD.from(-10).divInt(3); // -4 (Piso)
-     * CalcAUD.from(-10).divInt(3, { modStrategy: "truncated" }); // -3 (Truncado)
+     * CalcAUD.from(-10).divInt(3, { mathDivModStrategy: "truncated" }); // -3 (Truncado)
      * ```
      */
     public divInt(value: CalcAUDAllowedValue, options: CalcAUDOutputOptions = {}): CalcAUD {
-        const strategy = options.modStrategy ?? "euclidean";
+        const strategy = options.mathDivModStrategy ?? "euclidean";
         const start = performance.now();
         try {
             const other = CalcAUD.from(value);
@@ -507,11 +507,11 @@ export class CalcAUD {
      *
      * // Diferença de Estratégia com Negativos
      * CalcAUD.from(-10).mod(3); // 2 (Euclidiano: resto sempre positivo)
-     * CalcAUD.from(-10).mod(3, { modStrategy: "truncated" }); // -1 (Truncado: segue o sinal do dividendo)
+     * CalcAUD.from(-10).mod(3, { mathDivModStrategy: "truncated" }); // -1 (Truncado: segue o sinal do dividendo)
      * ```
      */
     public mod(value: CalcAUDAllowedValue, options: CalcAUDOutputOptions = {}): CalcAUD {
-        const strategy = options.modStrategy ?? "euclidean";
+        const strategy = options.mathDivModStrategy ?? "euclidean";
         const start = performance.now();
         try {
             const other = CalcAUD.from(value);

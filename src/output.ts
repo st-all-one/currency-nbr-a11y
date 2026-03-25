@@ -418,8 +418,6 @@ export class CalcAUDOutput {
             meta: {
                 options: this.options,
                 decimals: this.defaultDecimals,
-                currency: this.options.currency,
-                modStrategy: this.options.modStrategy,
             },
         };
 

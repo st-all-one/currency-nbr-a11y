@@ -580,3 +580,287 @@
   },
   timestamp: "2026-03-25T03:57:51.396Z"
 }
+2026-03-25 04:57:19.140 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.3588459999999998,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:57:19.145 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.10161899999999946,
+  value: "50",
+  type: "number",
+  internalValue: "50000000000000"
+}
+2026-03-25 04:57:19.148 +00:00 [DBG] calc-aud-nbr-a11y·engine·add: Addition performed {
+  calcTime: 3.7662710000000033,
+  currentAccumulatedResult: "150000000000000",
+  addingValue: "50000000000000"
+}
+2026-03-25 04:57:19.149 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.08080599999999549,
+  finalValue: "150000000000000",
+  decimals: 6
+}
+2026-03-25 04:57:19.150 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.026261000000005197,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:57:19.151 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.008521000000001777,
+  finalValue: "100000000000000",
+  decimals: 6
+}
+2026-03-25 04:57:19.151 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.185639000000009, result: "100.000000" }
+2026-03-25 04:57:19.151 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.001956000000006952, result: "100.000000" }
+2026-03-25 04:57:19.151 +00:00 [INF] calc-aud-nbr-a11y·output·monetary: Monetary output generated {
+  calcTime: 0.2743380000000002,
+  result: "R$ 100,000000",
+  locale: "pt-BR",
+  currency: "BRL"
+}
+2026-03-25 04:57:19.152 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.001955000000009477, result: "100.000000" }
+2026-03-25 04:57:19.152 +00:00 [INF] calc-aud-nbr-a11y·output·latex: LaTeX output generated {
+  calcTime: 0.1456890000000044,
+  result: "$$ 100 = \\text{round}_{NBR}(100, 6) = 100.000000 $$"
+}
+2026-03-25 04:57:19.153 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.025352999999995518,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:57:19.153 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.01620300000000441,
+  value: "0",
+  type: "number",
+  internalValue: "0"
+}
+2026-03-25 04:57:19.154 +00:00 [ERR] calc-aud-nbr-a11y·errors·division-by-zero: Operação Matemática Inválida {
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
+  title: "Operação Matemática Inválida",
+  status: 400,
+  detail: "Tentativa de divisão por zero.",
+  instance: "audit:err:5ed79dd3-f50c-49d2-996e-5f3a2cae5599",
+  math_audit: {
+    latex: "\\frac{100}{0}",
+    unicode: "100 ÷ 0",
+    operation: "division"
+  },
+  timestamp: "2026-03-25T04:57:19.154Z"
+}
+2026-03-25 04:59:26.317 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.6630749999999921,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:26.323 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.24528300000000058,
+  value: "50",
+  type: "number",
+  internalValue: "50000000000000"
+}
+2026-03-25 04:59:26.327 +00:00 [DBG] calc-aud-nbr-a11y·engine·add: Addition performed {
+  calcTime: 4.260678000000013,
+  currentAccumulatedResult: "150000000000000",
+  addingValue: "50000000000000"
+}
+2026-03-25 04:59:26.328 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.17523299999999153,
+  finalValue: "150000000000000",
+  decimals: 6
+}
+2026-03-25 04:59:26.331 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.04295200000001387,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:26.331 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.014946000000009008,
+  finalValue: "100000000000000",
+  decimals: 6
+}
+2026-03-25 04:59:26.332 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.411436000000009, result: "100.000000" }
+2026-03-25 04:59:26.332 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.0027940000000228338, result: "100.000000" }
+2026-03-25 04:59:26.333 +00:00 [INF] calc-aud-nbr-a11y·output·monetary: Monetary output generated {
+  calcTime: 0.5021600000000035,
+  result: "R$ 100,000000",
+  locale: "pt-BR",
+  currency: "BRL"
+}
+2026-03-25 04:59:26.333 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.003352000000006683, result: "100.000000" }
+2026-03-25 04:59:26.333 +00:00 [INF] calc-aud-nbr-a11y·output·latex: LaTeX output generated {
+  calcTime: 0.24947400000002062,
+  result: "$$ 100 = \\text{round}_{NBR}(100, 6) = 100.000000 $$"
+}
+2026-03-25 04:59:26.336 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.039181000000013455,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:26.337 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.03240600000000882,
+  value: "0",
+  type: "number",
+  internalValue: "0"
+}
+2026-03-25 04:59:26.337 +00:00 [ERR] calc-aud-nbr-a11y·errors·division-by-zero: Operação Matemática Inválida {
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
+  title: "Operação Matemática Inválida",
+  status: 400,
+  detail: "Tentativa de divisão por zero.",
+  instance: "audit:err:263ad21a-ca6f-48fd-b53d-a4839b5cfc9c",
+  math_audit: {
+    latex: "\\frac{100}{0}",
+    unicode: "100 ÷ 0",
+    operation: "division"
+  },
+  timestamp: "2026-03-25T04:59:26.337Z"
+}
+2026-03-25 04:59:53.044 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.37826099999999485,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:53.050 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.20170199999999738,
+  value: "50",
+  type: "number",
+  internalValue: "50000000000000"
+}
+2026-03-25 04:59:53.054 +00:00 [DBG] calc-aud-nbr-a11y·engine·add: Addition performed {
+  calcTime: 4.283586,
+  currentAccumulatedResult: "150000000000000",
+  addingValue: "50000000000000"
+}
+2026-03-25 04:59:53.058 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.20233100000000093,
+  finalValue: "150000000000000",
+  decimals: 6
+}
+2026-03-25 04:59:53.064 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.05440700000001186,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:53.068 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.011034999999992579,
+  finalValue: "100000000000000",
+  decimals: 6
+}
+2026-03-25 04:59:53.072 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.32203899999998953, result: "100.000000" }
+2026-03-25 04:59:53.076 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.004400000000003956, result: "100.000000" }
+2026-03-25 04:59:53.081 +00:00 [INF] calc-aud-nbr-a11y·output·monetary: Monetary output generated {
+  calcTime: 4.579853999999983,
+  result: "R$ 100,000000",
+  locale: "pt-BR",
+  currency: "BRL"
+}
+2026-03-25 04:59:53.081 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.002305000000006885, result: "100.000000" }
+2026-03-25 04:59:53.081 +00:00 [INF] calc-aud-nbr-a11y·output·latex: LaTeX output generated {
+  calcTime: 0.15057799999999588,
+  result: "$$ 100 = \\text{round}_{NBR}(100, 6) = 100.000000 $$"
+}
+2026-03-25 04:59:53.083 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.02912399999999593,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 04:59:53.083 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.015783999999996468,
+  value: "0",
+  type: "number",
+  internalValue: "0"
+}
+2026-03-25 04:59:53.084 +00:00 [ERR] calc-aud-nbr-a11y·errors·division-by-zero: Operação Matemática Inválida {
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
+  title: "Operação Matemática Inválida",
+  status: 400,
+  detail: "Tentativa de divisão por zero.",
+  instance: "audit:err:d5d99dcd-1730-4cee-820d-71f30ac4c47e",
+  math_audit: {
+    latex: "\\frac{100}{0}",
+    unicode: "100 ÷ 0",
+    operation: "division"
+  },
+  timestamp: "2026-03-25T04:59:53.084Z"
+}
+2026-03-25 05:00:47.374 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.6669160000000147,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 05:00:47.380 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.17132100000000605,
+  value: "50",
+  type: "number",
+  internalValue: "50000000000000"
+}
+2026-03-25 05:00:47.384 +00:00 [DBG] calc-aud-nbr-a11y·engine·add: Addition performed {
+  calcTime: 4.584324000000009,
+  currentAccumulatedResult: "150000000000000",
+  addingValue: "50000000000000"
+}
+2026-03-25 05:00:47.385 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.1980700000000013,
+  finalValue: "150000000000000",
+  decimals: 6
+}
+2026-03-25 05:00:47.388 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.03945999999999117,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 05:00:47.388 +00:00 [DBG] calc-aud-nbr-a11y·engine·commit: Commit performed {
+  calcTime: 0.01201199999999858,
+  finalValue: "100000000000000",
+  decimals: 6
+}
+2026-03-25 05:00:47.389 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.24668099999999527, result: "100.000000" }
+2026-03-25 05:00:47.389 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.0032820000000128857, result: "100.000000" }
+2026-03-25 05:00:47.390 +00:00 [INF] calc-aud-nbr-a11y·output·monetary: Monetary output generated {
+  calcTime: 0.4376270000000204,
+  result: "R$ 100,000000",
+  locale: "pt-BR",
+  currency: "BRL"
+}
+2026-03-25 05:00:47.390 +00:00 [INF] calc-aud-nbr-a11y·output·string: String output generated { calcTime: 0.003352000000006683, result: "100.000000" }
+2026-03-25 05:00:47.390 +00:00 [INF] calc-aud-nbr-a11y·output·latex: LaTeX output generated {
+  calcTime: 0.25093999999998573,
+  result: "$$ 100 = \\text{round}_{NBR}(100, 6) = 100.000000 $$"
+}
+2026-03-25 05:00:47.392 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.036316999999996824,
+  value: "100",
+  type: "string",
+  internalValue: "100000000000000"
+}
+2026-03-25 05:00:47.393 +00:00 [DBG] calc-aud-nbr-a11y·input·from: Input initialized {
+  calcTime: 0.02702899999999886,
+  value: "0",
+  type: "number",
+  internalValue: "0"
+}
+2026-03-25 05:00:47.394 +00:00 [ERR] calc-aud-nbr-a11y·errors·division-by-zero: Operação Matemática Inválida {
+  type: "https://github.com/st-all-one/calcaud-nbr-a11y/tree/main/errors/division-by-zero",
+  title: "Operação Matemática Inválida",
+  status: 400,
+  detail: "Tentativa de divisão por zero.",
+  instance: "audit:err:9197fff8-186e-4889-a210-faa379abb34b",
+  math_audit: {
+    latex: "\\frac{100}{0}",
+    unicode: "100 ÷ 0",
+    operation: "division"
+  },
+  timestamp: "2026-03-25T05:00:47.393Z"
+}

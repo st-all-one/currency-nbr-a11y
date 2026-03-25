@@ -11,7 +11,7 @@ export const VALID_ROUNDING_METHODS = ["NBR-5891", "HALF-EVEN", "HALF-UP", "TRUN
  * - 'truncated': Segue o padrão de linguagens como C/JS (resto com sinal do dividendo).
  * - 'euclidean': Garante que o resto seja sempre positivo.
  */
-export type ModStrategy = "truncated" | "euclidean";
+export type MathDivModStrategy = "truncated" | "euclidean";
 
 /**
  * Tipo representando as strings literais dos métodos de arredondamento válidos.
@@ -80,7 +80,7 @@ export interface CalcAUDOutputOptions {
      * Define a estratégia de cálculo para operações de módulo e divisão inteira.
      * @default "euclidean"
      */
-    modStrategy?: ModStrategy;
+    mathDivModStrategy?: MathDivModStrategy;
 }
 
 /**
@@ -90,5 +90,5 @@ export const DEFAULT_OPTIONS: Required<CalcAUDOutputOptions> = {
     roundingMethod: "NBR-5891",
     locale: "pt-BR",
     currency: "BRL",
-    modStrategy: "euclidean",
+    mathDivModStrategy: "euclidean",
 };
