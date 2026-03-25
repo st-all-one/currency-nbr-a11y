@@ -46,9 +46,9 @@ export function generateImageBuffer(latexExpression: string, result: string, ver
     // Cálculo da Altura Estimada
     // Geralmente auditores financeiros exibem em linha única.
     // Heurística baseada no font-size escalado + padding + expansão vertical por LaTeX.
-    
+
     let verticalExpansion = 0;
-    
+
     // Conta frações (especialmente aninhadas)
     const fracMatches = latexExpression.match(/\\frac/g);
     if (fracMatches) {
@@ -64,7 +64,7 @@ export function generateImageBuffer(latexExpression: string, result: string, ver
 
     // Altura base proporcional ao scaleFactor + padding + expansão calculada
     let baseHeight = (24 * scaleFactor) + (paddingVertical * 2) + verticalExpansion;
-    
+
     // Garante uma altura mínima e teto máximo
     const minHeight = 80;
     const maxHeight = 1000;

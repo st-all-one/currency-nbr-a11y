@@ -27,13 +27,13 @@ describe("Operações de Inteiros: divInt e mod (Unit)", () => {
         });
 
         it("deve realizar divisão inteira (5 // -3 = -2) [Default Euclidean/Floor]", () => {
-             // 5 / -3 = -1.66 -> Floor = -2
+            // 5 / -3 = -1.66 -> Floor = -2
             const result = CurrencyNBR.from(5).divInt(-3).commit(0);
             expect(result.toString()).toBe("-2");
         });
 
         it("deve realizar divisão inteira (5 // -3 = -1) [Strategy Truncated]", () => {
-             // 5 / -3 = -1.66 -> Trunc = -1
+            // 5 / -3 = -1.66 -> Trunc = -1
             const result = CurrencyNBR.from(5).divInt(-3, { modStrategy: "truncated" }).commit(0);
             expect(result.toString()).toBe("-1");
         });

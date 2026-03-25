@@ -120,7 +120,9 @@ describe("Edge Cases e Robustez (logFatal)", () => {
             const heightSimple = parseInt(svgSimple.match(/height="(\d+)"/)?.[1] || "0");
             const heightFrac = parseInt(svgFrac.match(/height="(\d+)"/)?.[1] || "0");
 
-            expect(heightFrac).toBe(heightSimple);
+            // No caso de uma única fração, a altura calculada (78.2) ainda cai no minHeight (80)
+            expect(heightFrac).toBe(80);
+            expect(heightSimple).toBe(80);
         });
 
         it("deve aumentar a altura do SVG quando a expressão contém raízes (\\sqrt)", () => {
@@ -133,7 +135,9 @@ describe("Edge Cases e Robustez (logFatal)", () => {
             const heightSimple = parseInt(svgSimple.match(/height="(\d+)"/)?.[1] || "0");
             const heightSqrt = parseInt(svgSqrt.match(/height="(\d+)"/)?.[1] || "0");
 
-            expect(heightSqrt).toBe(heightSimple );
+            // Base (63.2) + sqrt (25) = 88.2 -> ceil -> 89
+            expect(heightSqrt).toBe(89);
+            expect(heightSimple).toBe(80);
         });
     });
 

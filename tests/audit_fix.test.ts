@@ -12,7 +12,10 @@ Deno.test("CurrencyNBR - Audit Bug Fix - Complex nested operations", () => {
     const json1 = JSON.parse(calc1.toJson(["toUnicode", "toVerbalA11y"])) as any;
     assertEquals(json1.toUnicode, "10 + (5 - 2) = roundₙʙᵣ(13, 2) = 13.00");
     // Espaço duplo é esperado devido à implementação atual dos tokens verbais
-    assertEquals(json1.toVerbalA11y, "10 mais em grupo, 5  menos 2, fim do grupo é igual a 13 vírgula 00 (Arredondamento: NBR-5891)");
+    assertEquals(
+        json1.toVerbalA11y,
+        "10 mais em grupo, 5  menos 2, fim do grupo é igual a 13 vírgula 00 (Arredondamento: NBR-5891)",
+    );
 
     // 10 - (5 + 2)
     const calc2 = CurrencyNBR.from("10")
@@ -23,15 +26,18 @@ Deno.test("CurrencyNBR - Audit Bug Fix - Complex nested operations", () => {
 
     const json2 = JSON.parse(calc2.toJson(["toUnicode", "toVerbalA11y"])) as any;
     assertEquals(json2.toUnicode, "10 - (5 + 2) = roundₙʙᵣ(3, 2) = 3.00");
-    assertEquals(json2.toVerbalA11y, "10  menos em grupo, 5 mais 2, fim do grupo é igual a 3 vírgula 00 (Arredondamento: NBR-5891)");
+    assertEquals(
+        json2.toVerbalA11y,
+        "10  menos em grupo, 5 mais 2, fim do grupo é igual a 3 vírgula 00 (Arredondamento: NBR-5891)",
+    );
 
     // (10 + 5) * (2 + 1)
     const calc3 = CurrencyNBR.from(10).add(5).group()
         .mult(
-            CurrencyNBR.from(2).add(1).group()
+            CurrencyNBR.from(2).add(1).group(),
         )
         .commit(2);
-    
+
     const json3 = JSON.parse(calc3.toJson(["toUnicode"])) as any;
     assertEquals(json3.toUnicode, "(10 + 5) × (2 + 1) = roundₙʙᵣ(45, 2) = 45.00");
 });

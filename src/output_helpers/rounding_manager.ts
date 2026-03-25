@@ -1,5 +1,11 @@
 import type { RoundingMethod } from "./options.ts";
-import { roundToPrecisionNBR5891, roundCeil, roundHalfEven, roundHalfUp, roundTruncate } from "./rounding_strategies.ts";
+import {
+    roundCeil,
+    roundHalfEven,
+    roundHalfUp,
+    roundToPrecisionNBR5891,
+    roundTruncate,
+} from "./rounding_strategies.ts";
 
 /**
  * Aplica o método de arredondamento selecionado.

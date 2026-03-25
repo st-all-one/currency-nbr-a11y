@@ -26,7 +26,7 @@ Deno.test("CurrencyNBR.pow - validação rigorosa de expoente fracionário", () 
         CurrencyNBRError,
         "O denominador de um expoente fracionário deve ser um número inteiro positivo.",
     );
-    
+
     // Caso 4: Espaços em branco (deve funcionar se for válido, ou falhar se for "1 / 2 / 3")
     assertThrows(
         () => base.pow("1 / 2 / 3"),

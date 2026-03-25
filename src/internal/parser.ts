@@ -48,7 +48,8 @@ export function parseStringValue(value: string): bigint {
     throw new CurrencyNBRError({
         type: "invalid-numeric-format",
         title: "Erro de Parsing Numérico",
-        detail: `O valor fornecido não corresponde a nenhum formato numérico permitido (Inteiro, Decimal, Científico, Fração ou BigInt estrito).`,
+        detail:
+            `O valor fornecido não corresponde a nenhum formato numérico permitido (Inteiro, Decimal, Científico, Fração ou BigInt estrito).`,
         operation: "parse",
     });
 }

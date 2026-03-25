@@ -1,4 +1,3 @@
-
 import { describe, it } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { CurrencyNBR } from "../src/main.ts";
@@ -91,10 +90,10 @@ describe("Strict Parsing Rules", () => {
                 } catch (e) {
                     expect(e).toBeInstanceOf(CurrencyNBRError);
                     if (input === "1/0") {
-                         // Expect division by zero specific error or generic format error?
-                         // Current plan puts parsing in parseStringValue.
-                         // Fraction parsing likely throws if denominator is 0.
-                         // Let's accept any CurrencyNBRError for now.
+                        // Expect division by zero specific error or generic format error?
+                        // Current plan puts parsing in parseStringValue.
+                        // Fraction parsing likely throws if denominator is 0.
+                        // Let's accept any CurrencyNBRError for now.
                     }
                 }
             });

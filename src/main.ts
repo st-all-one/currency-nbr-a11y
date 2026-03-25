@@ -268,9 +268,7 @@ export class CurrencyNBR {
             const halfDenominator = otherValue / 2n;
 
             // O ajuste do sinal garante que o arredondamento funcione para números negativos
-            const adjustment = (this.activeTermValue < 0n) === (otherValue < 0n)
-                ? halfDenominator
-                : -halfDenominator;
+            const adjustment = (this.activeTermValue < 0n) === (otherValue < 0n) ? halfDenominator : -halfDenominator;
 
             const nextActiveValue = (numerator + adjustment) / otherValue;
 
@@ -353,9 +351,13 @@ export class CurrencyNBR {
 
             const nextActiveValue = quotient * INTERNAL_SCALE_FACTOR;
 
-            const nextActiveExpr = `${latexWrapper[0]} \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} ${latexWrapper[1]}`;
+            const nextActiveExpr = `${
+                latexWrapper[0]
+            } \\frac{${this.activeTermExpression}}{${other.getFullLaTeXExpression()}} ${latexWrapper[1]}`;
             const nextActiveVerbal = `${this.activeTermVerbal}${verbalOp}${other.getFullVerbalExpression()}`;
-            const nextActiveUnicode = `${unicodeWrapper[0]}${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()}${unicodeWrapper[1]}`;
+            const nextActiveUnicode = `${
+                unicodeWrapper[0]
+            }${this.activeTermUnicode} ÷ ${other.getFullUnicodeExpression()}${unicodeWrapper[1]}`;
 
             const result = new CurrencyNBR(
                 this.accumulatedValue,
@@ -600,7 +602,7 @@ export class CurrencyNBR {
                 type: "invalid-precision",
                 title: "Precisão Decimal Inválida",
                 detail: `O número de casas decimais deve ser um inteiro positivo. Recebido: ${decimals}`,
-                operation: "commit"
+                operation: "commit",
             });
         }
         try {
