@@ -6,7 +6,7 @@
 
     "publish": {
         "exclude": ["./tests", "./demo", "node_modules", "vendor", "GEMINI.md"],
-        "include": ["mod.ts"]
+        "include": ["mod.ts", "src", "docs"]
     },
     
     "workspace": ["./demo", "./tests"],
